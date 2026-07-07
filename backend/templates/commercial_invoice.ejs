@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commercial Invoice</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: <%= layout.font_family || 'Arial, sans-serif' %>;
+    font-size: <%= layout.font_size_body || '10px' %>;
+    color: #000;
+    background: #fff;
+    padding: 20px;
+  }
+  .page-wrapper {
+    width: 794px;
+    margin: 0 auto;
+    <%= layout.has_border ? 'border: 1px solid #000; padding: 16px;' : '' %>
+  }
+  /* ---- Document title ---- */
+  .doc-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #000;
+  }
+  /* ---- Two-column header grid ---- */
+  .header-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid #000;
+    margin-bottom: 8px;
+  }
+  .header-cell {
+    padding: 6px 8px;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+  }
+  .header-cell:nth-child(even) { border-right: none; }
+  .header-cell:nth-last-child(-n+2) { border-bottom: none; }
+  .label {
+    font-weight: <%= layout.bold_labels !== false ? 'bold' : 'normal' %>;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .value { white-space: pre-line; }
+  /* ---- Party boxes ---- */
+  .parties-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid #000;
+    border-top: none;
+    margin-bottom: 8px;
+  }
+  .party-cell {
+    padding: 8px;
+    border-right: 1px solid #000;
+  }
+  .party-cell:last-child { border-right: none; }
+  /* ---- Item table ---- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+  }
+  th, td {
+    border: <%= layout.table_border_style || '1px solid #000' %>;
+    padding: 5px 6px;
+    vertical-align: top;
+  }
+  thead th {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .col-sr    { width: 4%;  text-align: center; }
+  .col-desc  { width: 34%; text-align: left;   }
+  .col-hs    { width: 12%; text-align: center; }
+  .col-qty   { width: 12%; text-align: center; }
+  .col-up    { width: 16%; text-align: right;  }
+  .col-amt   { width: 16%; text-align: right;  }
+  /* ---- Totals block ---- */
+  .totals-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 8px;
+  }
+  .totals-table {
+    width: 320px;
+  }
+  .totals-table td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+  }
+  .totals-table .tot-label { font-weight: bold; text-align: left; }
+  .totals-table .tot-value { text-align: right; }
+  .totals-table .grand-total td { font-weight: bold; font-size: 11px; background: #f0f0f0; }
+  /* ---- Amount in words ---- */
+  .amount-words {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+  /* ---- Bank details ---- */
+  .bank-details {
+    border: 1px solid #000;
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  /* ---- Declaration + Signatory ---- */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .declaration { font-size: 8px; color: #444; white-space: pre-line; }
+  .signatory-box {
+    border-top: 1px solid #000;
+    padding-top: 6px;
+    text-align: center;
+    font-size: 9px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- Document Title -->
+  <div class="doc-title">Commercial Invoice</div>
+
+  <!-- Exporter / Importer -->
+  <div class="parties-grid">
+    <div class="party-cell">
+      <div class="label">Exporter / Seller</div>
+      <div class="value"><%= exporter || '' %></div>
+    </div>
+    <div class="party-cell">
+      <div class="label">Importer / Consignee</div>
+      <div class="value"><%= importer || '' %></div>
+    </div>
+  </div>
+
+  <% if (notify_party) { %>
+  <div class="parties-grid" style="margin-bottom:8px;">
+    <div class="party-cell" style="border-right:none; grid-column: 1 / -1;">
+      <div class="label">Notify Party</div>
+      <div class="value"><%= notify_party %></div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Reference / Shipment details grid -->
+  <div class="header-grid">
+    <div class="header-cell">
+      <div class="label">Invoice No.</div>
+      <div class="value"><%= invoice_no || '' %></div>
+    </div>
+    <div class="header-cell">
+      <div class="label">Invoice Date</div>
+      <div class="value"><%= invoice_date || '' %></div>
+    </div>
+    <% if (iec_no) { %>
+    <div class="header-cell">
+      <div class="label">IEC No.</div>
+      <div class="value"><%= iec_no %></div>
+    </div>
+    <% } %>
+    <% if (gst_no) { %>
+    <div class="header-cell">
+      <div class="label">GST / VAT No.</div>
+      <div class="value"><%= gst_no %></div>
+    </div>
+    <% } %>
+    <% if (po_no) { %>
+    <div class="header-cell">
+      <div class="label">P.O. No.</div>
+      <div class="value"><%= po_no %></div>
+    </div>
+    <% } %>
+    <% if (lc_no) { %>
+    <div class="header-cell">
+      <div class="label">L/C No.</div>
+      <div class="value"><%= lc_no %></div>
+    </div>
+    <% } %>
+    <div class="header-cell">
+      <div class="label">Incoterms</div>
+      <div class="value"><%= incoterms || '' %></div>
+    </div>
+    <div class="header-cell">
+      <div class="label">Currency</div>
+      <div class="value"><%= currency || '' %></div>
+    </div>
+    <% if (port_of_loading) { %>
+    <div class="header-cell">
+      <div class="label">Port of Loading</div>
+      <div class="value"><%= port_of_loading %></div>
+    </div>
+    <% } %>
+    <% if (port_of_discharge) { %>
+    <div class="header-cell">
+      <div class="label">Port of Discharge</div>
+      <div class="value"><%= port_of_discharge %></div>
+    </div>
+    <% } %>
+    <% if (vessel_flight) { %>
+    <div class="header-cell">
+      <div class="label">Vessel / Flight</div>
+      <div class="value"><%= vessel_flight %></div>
+    </div>
+    <% } %>
+    <% if (country_of_origin) { %>
+    <div class="header-cell">
+      <div class="label">Country of Origin</div>
+      <div class="value"><%= country_of_origin %></div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Item Table -->
+  <table>
+    <thead>
+      <tr>
+        <th class="col-sr">Sr.</th>
+        <th class="col-desc">Description of Goods</th>
+        <th class="col-hs">HS Code</th>
+        <th class="col-qty">Quantity</th>
+        <th class="col-up">Unit Price</th>
+        <th class="col-amt">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% item_table.forEach(function(row, i) { %>
+      <tr>
+        <td class="col-sr"><%= row.sr_no || (i + 1) %></td>
+        <td class="col-desc"><%= row.description || '' %></td>
+        <td class="col-hs"><%= row.hs_code || '' %></td>
+        <td class="col-qty"><%= row.qty || '' %></td>
+        <td class="col-up"><%= row.unit_price || '' %></td>
+        <td class="col-amt"><%= row.amount || '' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" style="font-weight:bold; text-align:right;">Total</td>
+        <td class="col-qty" style="font-weight:bold;"><%= total_qty || '' %></td>
+        <td class="col-up"></td>
+        <td class="col-amt" style="font-weight:bold;"><%= total_value || '' %></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- Totals block (freight, insurance if present) -->
+  <% if (freight_charges || insurance_charges) { %>
+  <div class="totals-wrap">
+    <table class="totals-table">
+      <% if (freight_charges) { %>
+      <tr>
+        <td class="tot-label">Freight</td>
+        <td class="tot-value"><%= freight_charges %></td>
+      </tr>
+      <% } %>
+      <% if (insurance_charges) { %>
+      <tr>
+        <td class="tot-label">Insurance</td>
+        <td class="tot-value"><%= insurance_charges %></td>
+      </tr>
+      <% } %>
+      <tr class="grand-total">
+        <td class="tot-label">Grand Total</td>
+        <td class="tot-value"><%= total_value || '' %></td>
+      </tr>
+    </table>
+  </div>
+  <% } %>
+
+  <!-- Amount in Words -->
+  <% if (amount_in_words) { %>
+  <div class="amount-words">
+    <span class="label">Amount in Words: </span><%= amount_in_words %>
+  </div>
+  <% } %>
+
+  <!-- Bank Details -->
+  <% if (bank_details && (bank_details.bank_name || bank_details.account_no)) { %>
+  <div class="bank-details">
+    <div class="label" style="margin-bottom:4px;">Bank Details</div>
+    <% if (bank_details.bank_name)   { %><div><strong>Bank:</strong> <%= bank_details.bank_name %></div><% } %>
+    <% if (bank_details.account_no)  { %><div><strong>A/C No.:</strong> <%= bank_details.account_no %></div><% } %>
+    <% if (bank_details.swift_code)  { %><div><strong>SWIFT:</strong> <%= bank_details.swift_code %></div><% } %>
+    <% if (bank_details.iban)        { %><div><strong>IBAN:</strong> <%= bank_details.iban %></div><% } %>
+    <% if (bank_details.branch)      { %><div><strong>Branch:</strong> <%= bank_details.branch %></div><% } %>
+  </div>
+  <% } %>
+
+  <!-- Declaration + Signatory -->
+  <div class="footer-grid">
+    <div>
+      <% if (declaration) { %>
+      <div class="declaration"><%= declaration %></div>
+      <% } %>
+    </div>
+    <div class="signatory-box">
+      <div style="height:40px;"></div>
+      <div><strong><%= signatory || 'Authorised Signatory' %></strong></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoice</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: <%= layout.font_family || 'Arial, sans-serif' %>;
+    font-size: <%= layout.font_size_body || '10px' %>;
+    color: #000;
+    background: #fff;
+    padding: 20px;
+  }
+  .page-wrapper {
+    width: 794px;
+    margin: 0 auto;
+    <%= layout.has_border ? 'border: 1px solid #000; padding: 16px;' : '' %>
+  }
+  /* ---- Header bar ---- */
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #000;
+  }
+  .seller-block { max-width: 50%; }
+  .seller-block .company-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .seller-block .address { white-space: pre-line; font-size: 9px; color: #444; }
+  .invoice-meta { text-align: right; }
+  .invoice-meta .doc-title {
+    font-size: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #000;
+    margin-bottom: 6px;
+  }
+  .invoice-meta table { margin-left: auto; }
+  .invoice-meta td { padding: 2px 6px; font-size: 10px; }
+  .invoice-meta .meta-label { font-weight: bold; text-align: right; }
+  .invoice-meta .meta-value { text-align: left; }
+  /* ---- Bill-to / Ship-to ---- */
+  .billing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .billing-cell {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+  .label {
+    font-weight: <%= layout.bold_labels !== false ? 'bold' : 'normal' %>;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 4px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #eee;
+  }
+  .value { white-space: pre-line; }
+  /* ---- Item table ---- */
+  table.items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0;
+  }
+  table.items th, table.items td {
+    border: <%= layout.table_border_style || '1px solid #ccc' %>;
+    padding: 6px 8px;
+    vertical-align: top;
+  }
+  table.items thead th {
+    background: #f5f5f5;
+    font-weight: bold;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .col-sr    { width: 5%;  text-align: center; }
+  .col-desc  { width: 40%; text-align: left;   }
+  .col-qty   { width: 10%; text-align: center; }
+  .col-tax   { width: 10%; text-align: center; }
+  .col-up    { width: 16%; text-align: right;  }
+  .col-amt   { width: 16%; text-align: right;  }
+  /* ---- Totals ---- */
+  .totals-section {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+  }
+  .totals-table {
+    width: 280px;
+    border-collapse: collapse;
+  }
+  .totals-table td {
+    border: 1px solid #ddd;
+    padding: 5px 10px;
+    font-size: 10px;
+  }
+  .totals-table .t-label { text-align: left; }
+  .totals-table .t-value { text-align: right; }
+  .totals-table .grand-total td {
+    font-weight: bold;
+    font-size: 12px;
+    background: #f0f0f0;
+    border-top: 2px solid #000;
+  }
+  /* ---- Amount in words ---- */
+  .amount-words {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    font-style: italic;
+    font-size: 9px;
+  }
+  /* ---- Payment / Bank ---- */
+  .payment-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .payment-cell {
+    border: 1px solid #ddd;
+    padding: 8px;
+    font-size: 9px;
+  }
+  /* ---- Notes ---- */
+  .notes-box {
+    border: 1px solid #ddd;
+    padding: 8px;
+    font-size: 9px;
+    color: #555;
+    margin-bottom: 14px;
+    white-space: pre-line;
+  }
+  /* ---- Signatory ---- */
+  .signatory-box {
+    text-align: right;
+    padding-top: 30px;
+    border-top: 1px solid #000;
+    font-size: 9px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <!-- Header: Seller info + Invoice title/meta -->
+  <div class="doc-header">
+    <div class="seller-block">
+      <div class="company-name"><%= seller ? seller.split('\n')[0] : '' %></div>
+      <div class="address"><%= seller ? seller.split('\n').slice(1).join('\n') : '' %></div>
+    </div>
+    <div class="invoice-meta">
+      <div class="doc-title">Invoice</div>
+      <table>
+        <tr>
+          <td class="meta-label">Invoice No.:</td>
+          <td class="meta-value"><%= invoice_no || '' %></td>
+        </tr>
+        <tr>
+          <td class="meta-label">Date:</td>
+          <td class="meta-value"><%= invoice_date || '' %></td>
+        </tr>
+        <% if (due_date) { %>
+        <tr>
+          <td class="meta-label">Due Date:</td>
+          <td class="meta-value"><%= due_date %></td>
+        </tr>
+        <% } %>
+        <% if (po_no) { %>
+        <tr>
+          <td class="meta-label">P.O. No.:</td>
+          <td class="meta-value"><%= po_no %></td>
+        </tr>
+        <% } %>
+      </table>
+    </div>
+  </div>
+
+  <!-- Bill-to / Ship-to -->
+  <div class="billing-grid">
+    <div class="billing-cell">
+      <div class="label">Bill To</div>
+      <div class="value"><%= buyer || '' %></div>
+    </div>
+    <% if (ship_to) { %>
+    <div class="billing-cell">
+      <div class="label">Ship To</div>
+      <div class="value"><%= ship_to %></div>
+    </div>
+    <% } else { %>
+    <div></div>
+    <% } %>
+  </div>
+
+  <!-- Item Table -->
+  <table class="items">
+    <thead>
+      <tr>
+        <th class="col-sr">Sr.</th>
+        <th class="col-desc">Description</th>
+        <th class="col-qty">Qty</th>
+        <% if (item_table.some(function(r){ return r.tax_rate; })) { %>
+        <th class="col-tax">Tax %</th>
+        <% } %>
+        <th class="col-up">Unit Price</th>
+        <th class="col-amt">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% item_table.forEach(function(row, i) { %>
+      <tr>
+        <td class="col-sr"><%= row.sr_no || (i + 1) %></td>
+        <td class="col-desc"><%= row.description || '' %></td>
+        <td class="col-qty"><%= row.qty || '' %></td>
+        <% if (item_table.some(function(r){ return r.tax_rate; })) { %>
+        <td class="col-tax"><%= row.tax_rate || '' %></td>
+        <% } %>
+        <td class="col-up"><%= row.unit_price || '' %></td>
+        <td class="col-amt"><%= row.amount || '' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Totals -->
+  <div class="totals-section">
+    <table class="totals-table">
+      <% if (subtotal) { %>
+      <tr>
+        <td class="t-label">Subtotal</td>
+        <td class="t-value"><%= subtotal %></td>
+      </tr>
+      <% } %>
+      <% if (discount) { %>
+      <tr>
+        <td class="t-label">Discount</td>
+        <td class="t-value">- <%= discount %></td>
+      </tr>
+      <% } %>
+      <% if (tax) { %>
+      <tr>
+        <td class="t-label"><%= tax_label || 'Tax' %></td>
+        <td class="t-value"><%= tax %></td>
+      </tr>
+      <% } %>
+      <% if (shipping) { %>
+      <tr>
+        <td class="t-label">Shipping</td>
+        <td class="t-value"><%= shipping %></td>
+      </tr>
+      <% } %>
+      <tr class="grand-total">
+        <td class="t-label">Total</td>
+        <td class="t-value"><%= total || '' %></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Amount in words -->
+  <% if (amount_in_words) { %>
+  <div class="amount-words">
+    <strong>Amount in Words:</strong> <%= amount_in_words %>
+  </div>
+  <% } %>
+
+  <!-- Payment terms + Bank details -->
+  <% if (payment_terms || payment_method || (bank_details && bank_details.bank_name)) { %>
+  <div class="payment-grid">
+    <% if (payment_terms || payment_method) { %>
+    <div class="payment-cell">
+      <% if (payment_terms) { %><div><strong>Payment Terms:</strong> <%= payment_terms %></div><% } %>
+      <% if (payment_method) { %><div><strong>Method:</strong> <%= payment_method %></div><% } %>
+    </div>
+    <% } %>
+    <% if (bank_details && bank_details.bank_name) { %>
+    <div class="payment-cell">
+      <div class="label" style="margin-bottom:4px;">Bank Details</div>
+      <% if (bank_details.bank_name)  { %><div><strong>Bank:</strong> <%= bank_details.bank_name %></div><% } %>
+      <% if (bank_details.account_no) { %><div><strong>A/C:</strong> <%= bank_details.account_no %></div><% } %>
+      <% if (bank_details.swift_code) { %><div><strong>SWIFT:</strong> <%= bank_details.swift_code %></div><% } %>
+      <% if (bank_details.iban)       { %><div><strong>IBAN:</strong> <%= bank_details.iban %></div><% } %>
+      <% if (bank_details.branch)     { %><div><strong>Branch:</strong> <%= bank_details.branch %></div><% } %>
+    </div>
+    <% } %>
+  </div>
+  <% } %>
+
+  <!-- Notes -->
+  <% if (notes) { %>
+  <div class="notes-box"><strong>Notes:</strong><br><%= notes %></div>
+  <% } %>
+
+  <!-- Signatory -->
+  <div class="signatory-box">
+    <div><strong><%= signatory || 'Authorised Signatory' %></strong></div>
+  </div>
+
+</div>
+</body>
+</html>

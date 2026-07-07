@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packing List</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: <%= layout.font_family || 'Arial, sans-serif' %>;
+    font-size: <%= layout.font_size_body || '10px' %>;
+    color: #000;
+    background: #fff;
+    padding: 20px;
+  }
+  .page-wrapper {
+    width: 794px;
+    margin: 0 auto;
+    <%= layout.has_border ? 'border: 1px solid #000; padding: 16px;' : '' %>
+  }
+  .doc-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #000;
+  }
+  .label {
+    font-weight: <%= layout.bold_labels !== false ? 'bold' : 'normal' %>;
+    font-size: 9px;
+    text-transform: uppercase;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .value { white-space: pre-line; }
+  /* ---- Parties ---- */
+  .parties-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border: 1px solid #000;
+    margin-bottom: 8px;
+  }
+  .party-cell {
+    padding: 8px;
+    border-right: 1px solid #000;
+  }
+  .party-cell:last-child { border-right: none; }
+  /* ---- Reference grid ---- */
+  .ref-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid #000;
+    border-top: none;
+    margin-bottom: 8px;
+  }
+  .ref-cell {
+    padding: 6px 8px;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+  }
+  .ref-cell:nth-child(3n) { border-right: none; }
+  /* ---- Marks box ---- */
+  .marks-box {
+    border: 1px solid #000;
+    padding: 8px;
+    margin-bottom: 8px;
+    min-height: 60px;
+  }
+  /* ---- Item table ---- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+  }
+  th, td {
+    border: <%= layout.table_border_style || '1px solid #000' %>;
+    padding: 5px 6px;
+    vertical-align: top;
+  }
+  thead th {
+    background: #f0f0f0;
+    font-weight: bold;
+    text-align: center;
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .col-sr    { width: 4%;  text-align: center; }
+  .col-desc  { width: 26%; text-align: left;   }
+  .col-hs    { width: 10%; text-align: center; }
+  .col-pkgs  { width: 10%; text-align: center; }
+  .col-type  { width: 10%; text-align: center; }
+  .col-gross { width: 13%; text-align: right;  }
+  .col-net   { width: 13%; text-align: right;  }
+  .col-dim   { width: 14%; text-align: center; }
+  /* ---- Totals row ---- */
+  .totals-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid #000;
+    margin-bottom: 8px;
+  }
+  .tot-cell {
+    padding: 6px 8px;
+    border-right: 1px solid #000;
+    text-align: center;
+  }
+  .tot-cell:last-child { border-right: none; }
+  /* ---- Footer ---- */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .declaration { font-size: 8px; color: #444; white-space: pre-line; }
+  .signatory-box {
+    border-top: 1px solid #000;
+    padding-top: 6px;
+    text-align: center;
+    font-size: 9px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+
+  <div class="doc-title">Packing List</div>
+
+  <!-- Parties -->
+  <div class="parties-grid">
+    <div class="party-cell">
+      <div class="label">Shipper / Exporter</div>
+      <div class="value"><%= shipper || '' %></div>
+    </div>
+    <div class="party-cell">
+      <div class="label">Consignee</div>
+      <div class="value"><%= consignee || '' %></div>
+    </div>
+  </div>
+
+  <% if (notify_party) { %>
+  <div class="parties-grid" style="margin-bottom:8px; border-top:none;">
+    <div class="party-cell" style="border-right:none; grid-column: 1 / -1;">
+      <div class="label">Notify Party</div>
+      <div class="value"><%= notify_party %></div>
+    </div>
+  </div>
+  <% } %>
+
+  <!-- Reference numbers -->
+  <div class="ref-grid">
+    <div class="ref-cell">
+      <div class="label">Packing List No.</div>
+      <div class="value"><%= packing_list_no || '' %></div>
+    </div>
+    <div class="ref-cell">
+      <div class="label">Date</div>
+      <div class="value"><%= date || '' %></div>
+    </div>
+    <div class="ref-cell">
+      <div class="label">Invoice Ref.</div>
+      <div class="value"><%= invoice_ref || '' %></div>
+    </div>
+    <% if (bl_no) { %>
+    <div class="ref-cell">
+      <div class="label">B/L No.</div>
+      <div class="value"><%= bl_no %></div>
+    </div>
+    <% } %>
+    <% if (port_of_loading) { %>
+    <div class="ref-cell">
+      <div class="label">Port of Loading</div>
+      <div class="value"><%= port_of_loading %></div>
+    </div>
+    <% } %>
+    <% if (port_of_discharge) { %>
+    <div class="ref-cell">
+      <div class="label">Port of Discharge</div>
+      <div class="value"><%= port_of_discharge %></div>
+    </div>
+    <% } %>
+    <% if (vessel_flight) { %>
+    <div class="ref-cell">
+      <div class="label">Vessel / Flight</div>
+      <div class="value"><%= vessel_flight %></div>
+    </div>
+    <% } %>
+    <% if (country_of_origin) { %>
+    <div class="ref-cell">
+      <div class="label">Country of Origin</div>
+      <div class="value"><%= country_of_origin %></div>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Marks and Numbers -->
+  <% if (marks_and_numbers) { %>
+  <div class="marks-box">
+    <div class="label">Marks &amp; Numbers</div>
+    <div class="value"><%= marks_and_numbers %></div>
+  </div>
+  <% } %>
+
+  <!-- Item Breakdown Table -->
+  <table>
+    <thead>
+      <tr>
+        <th class="col-sr">Sr.</th>
+        <th class="col-desc">Description</th>
+        <th class="col-hs">HS Code</th>
+        <th class="col-pkgs">No. of Pkgs</th>
+        <th class="col-type">Pkg Type</th>
+        <th class="col-gross">Gross Wt.</th>
+        <th class="col-net">Net Wt.</th>
+        <th class="col-dim">Dimensions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% item_breakdown.forEach(function(row, i) { %>
+      <tr>
+        <td class="col-sr"><%= row.sr_no || (i + 1) %></td>
+        <td class="col-desc"><%= row.description || '' %></td>
+        <td class="col-hs"><%= row.hs_code || '' %></td>
+        <td class="col-pkgs"><%= row.no_of_packages || '' %></td>
+        <td class="col-type"><%= row.package_type || '' %></td>
+        <td class="col-gross"><%= row.gross_weight || '' %></td>
+        <td class="col-net"><%= row.net_weight || '' %></td>
+        <td class="col-dim"><%= row.dimensions || '' %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Summary Totals -->
+  <div class="totals-summary">
+    <div class="tot-cell">
+      <div class="label">Total Packages</div>
+      <div class="value"><%= package_count || '' %></div>
+    </div>
+    <div class="tot-cell">
+      <div class="label">Gross Weight</div>
+      <div class="value"><%= gross_weight || '' %></div>
+    </div>
+    <div class="tot-cell">
+      <div class="label">Net Weight</div>
+      <div class="value"><%= net_weight || '' %></div>
+    </div>
+    <div class="tot-cell">
+      <div class="label">CBM / Volume</div>
+      <div class="value"><%= cbm || dimensions || '' %></div>
+    </div>
+  </div>
+
+  <!-- Declaration + Signatory -->
+  <div class="footer-grid">
+    <div>
+      <% if (declaration) { %>
+      <div class="declaration"><%= declaration %></div>
+      <% } %>
+    </div>
+    <div class="signatory-box">
+      <div style="height:40px;"></div>
+      <div><strong><%= signatory || 'Authorised Signatory' %></strong></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocuMirror — PDF Extractor</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3250;
+    --accent: #5b6ef5;
+    --accent-hover: #7080ff;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --error: #ef4444;
+    --text: #e8eaf6;
+    --text-muted: #8890b8;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .header .logo {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .header .logo span { color: var(--accent); }
+  .header .tagline {
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 680px;
+    padding: 32px;
+  }
+  /* ── Drop zone ── */
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: rgba(91,110,245,0.06);
+  }
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .dropzone .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+    filter: grayscale(0.3);
+  }
+  .dropzone .drop-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .dropzone .drop-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .dropzone .drop-sub strong { color: var(--accent); }
+  /* ── File pill ── */
+  .file-pill {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .file-pill.visible { display: flex; }
+  .file-pill .file-icon { font-size: 22px; }
+  .file-pill .file-name { flex: 1; font-weight: 500; word-break: break-all; }
+  .file-pill .file-size { color: var(--text-muted); white-space: nowrap; }
+  .file-pill .remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+  }
+  .file-pill .remove-btn:hover { color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Docu<span>Mirror</span></div>
+  <div class="tagline">PDF → EJS Template + JSON · Visual reproduction via LLM + SSIM loop</div>
+</div>
+
+<div class="card">
+
+  <!-- ── Upload section ── -->
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".pdf" />
+    <span class="icon">📄</span>
+    <div class="drop-title">Drop your PDF here</div>
+    <div class="drop-sub">or <strong>click to browse</strong> &nbsp;·&nbsp; PDF files only</div>
+  </div>
+
+  <div class="file-pill" id="filePill">
+    <span class="file-icon">📋</span>
+    <span class="file-name" id="pillName"></span>
+    <span class="file-size" id="pillSize"></span>
+    <button class="remove-btn" id="removeBtn" title="Remove">✕</button>
+  </div>
+
+  <button class="submit-btn" id="submitBtn" disabled>
+    <div class="spinner"></div>
+    <span class="btn-text">Extract Template &amp; Data</span>
+  </button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bar indeterminate" id="progressBar"></div>
+  </div>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <!-- ── Results panel ── -->
+  <div class="results-panel" id="resultsPanel">
+    <div class="results-header">
+      <h2>Extraction Results</h2>
+      <span class="badge" id="ssimBadge"></span>
+    </div>
+
+    <!-- Metric boxes -->
+    <div class="metrics">
+      <div class="metric-box">
+        <div class="m-label">Document Type</div>
+        <div class="m-value" id="mDocType" style="font-size:14px;padding-top:3px;">—</div>
+      </div>
+      <div class="metric-box">
+        <div class="m-label">Final SSIM</div>
+        <div class="m-value" id="mSsim">—</div>
+      </div>
+      <div class="metric-box">
+        <div class="m-label">Iterations</div>
+        <div class="m-value" id="mIter">—</div>
+      </div>
+    </div>
+
+    <!-- Iteration history table -->
+    <table class="iter-table" id="iterTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>SSIM Score</th>
+          <th>Mismatches</th>
+        </tr>
+      </thead>
+      <tbody id="iterBody"></tbody>
+    </table>
+
+    <!-- Tabs: EJS / JSON / Preview -->
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="tab-ejs">template.ejs</button>
+      <button class="tab-btn" data-tab="tab-json">data.json</button>
+      <button class="tab-btn" data-tab="tab-preview">Preview</button>
+    </div>
+
+    <div class="tab-panel active" id="tab-ejs">
+      <div class="code-wrap">
+        <button class="copy-btn" data-target="ejsCode">Copy</button>
+        <pre id="ejsCode"></pre>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-json">
+      <div class="code-wrap">
+        <button class="copy-btn" data-target="jsonCode">Copy</button>
+        <pre id="jsonCode"></pre>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-preview">
+      <img id="previewImg" alt="Rendered preview" />
+      <div class="preview-note" id="previewNote"></div>
+    </div>
+
+    <!-- Downloads -->
+    <div class="download-row">
+      <button class="dl-btn" id="dlEjs">⬇ template.ejs</button>
+      <button class="dl-btn" id="dlJson">⬇ data.json</button>
+    </div>
+  </div>
+
+</div><!-- /.card -->
+
+<script>
+/* ── State ── */
+let selectedFile = null;
+let lastResult   = null;
+let lastJobId    = null;
+
+/* ── DOM refs ── */
+const dropzone    = document.getElementById('dropzone');
+const fileInput   = document.getElementById('fileInput');
+const filePill    = document.getElementById('filePill');
+const pillName    = document.getElementById('pillName');
+const pillSize    = document.getElementById('pillSize');
+const removeBtn   = document.getElementById('removeBtn');
+const submitBtn   = document.getElementById('submitBtn');
+const progressWrap= document.getElementById('progressWrap');
+const statusMsg   = document.getElementById('statusMsg');
+const resultsPanel= document.getElementById('resultsPanel');
+
+/* ── Drag-and-drop ── */
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', ()  => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+removeBtn.addEventListener('click', e => { e.stopPropagation(); clearFile(); });
+
+function handleFile(f) {
+  if (!f.name.toLowerCase().endsWith('.pdf')) {
+    showStatus('Only PDF files are supported.', 'error');
+    return;
+  }
+  selectedFile = f;
+  pillName.textContent  = f.name;
+  pillSize.textContent  = formatBytes(f.size);
+  filePill.classList.add('visible');
+  submitBtn.disabled    = false;
+  clearStatus();
+}
+
+function clearFile() {
+  selectedFile        = null;
+  fileInput.value     = '';
+  filePill.classList.remove('visible');
+  submitBtn.disabled  = true;
+  clearStatus();
+}
+
+/* ── Submit ── */
+submitBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+
+  setLoading(true);
+  showStatus('Uploading and running extraction pipeline… this may take 30–90 seconds.', 'info');
+  resultsPanel.classList.remove('visible');
+  lastResult = null;
+  lastJobId  = null;
+
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+
+  try {
+    const res = await fetch('/extract', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showStatus('Error ' + res.status + ': ' + (data.detail || 'Unknown error'), 'error');
+      return;
+    }
+
+    lastResult = data;
+    lastJobId  = data.job_id;
+    renderResults(data);
+    showStatus('Extraction complete!', 'success');
+  } catch (err) {
+    showStatus('Network error: ' + err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+});
+
+/* ── Render results ── */
+function renderResults(d) {
+  /* Metrics */
+  document.getElementById('mDocType').textContent = d.doc_type.replace(/_/g, ' ');
+  const ssim = d.final_ssim;
+  const ssimEl = document.getElementById('mSsim');
+  ssimEl.textContent = (ssim * 100).toFixed(1) + '%';
+  ssimEl.className   = 'm-value ' + (ssim >= 0.92 ? 'good' : 'warn');
+  document.getElementById('mIter').textContent = d.iterations.length;
+
+  const badge = document.getElementById('ssimBadge');
+  if (ssim >= 0.92) {
+    badge.textContent = '✓ SSIM target met';
+    badge.className   = 'badge success';
+  } else {
+    badge.textContent = '⚠ SSIM below 0.92';
+    badge.className   = 'badge warning';
+  }
+
+  /* Iteration table */
+  const tbody = document.getElementById('iterBody');
+  tbody.innerHTML = '';
+  d.iterations.forEach(it => {
+    const pct = (it.ssim_score * 100).toFixed(1);
+    const barW = Math.round(it.ssim_score * 100);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${it.iteration}</td>
+      <td>
+        <span class="ssim-bar-wrap"><span class="ssim-bar" style="width:${barW}%"></span></span>
+        ${pct}%
+      </td>
+      <td>${it.mismatch_count >= 0 ? it.mismatch_count : '—'}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  /* Code panels */
+  document.getElementById('ejsCode').textContent  = d.template_ejs;
+  document.getElementById('jsonCode').textContent = JSON.stringify(d.data_json, null, 2);
+
+  /* Preview tab */
+  loadPreview(d.job_id);
+
+  resultsPanel.classList.add('visible');
+  activateTab('tab-ejs');
+  resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Preview image ── */
+function loadPreview(jobId) {
+  const img  = document.getElementById('previewImg');
+  const note = document.getElementById('previewNote');
+  img.classList.remove('visible');
+  note.textContent = 'Loading preview…';
+
+  const previewUrl = `/extract/${jobId}/preview`;
+  img.onload  = () => { img.classList.add('visible'); note.textContent = 'Playwright-rendered screenshot of the final template.'; };
+  img.onerror = () => { note.textContent = 'Preview not available (output may have been cleaned up).'; };
+  img.src = previewUrl;
+}
+
+/* ── Tabs ── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+});
+
+function activateTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b  => b.classList.toggle('active', b.dataset.tab === id));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === id));
+}
+
+/* ── Copy buttons ── */
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const text = document.getElementById(btn.dataset.target).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = orig, 1500);
+    });
+  });
+});
+
+/* ── Download buttons ── */
+document.getElementById('dlEjs').addEventListener('click', () => {
+  if (!lastResult) return;
+  download('template.ejs', lastResult.template_ejs, 'text/plain');
+});
+document.getElementById('dlJson').addEventListener('click', () => {
+  if (!lastResult) return;
+  download('data.json', JSON.stringify(lastResult.data_json, null, 2), 'application/json');
+});
+
+function download(filename, content, mime) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── Helpers ── */
+function setLoading(on) {
+  submitBtn.disabled = on;
+  submitBtn.classList.toggle('loading', on);
+  progressWrap.classList.toggle('visible', on);
+}
+
+function showStatus(msg, type) {
+  statusMsg.textContent = msg;
+  statusMsg.className   = `status-msg visible ${type}`;
+}
+
+function clearStatus() {
+  statusMsg.className = 'status-msg';
+}
+
+function formatBytes(b) {
+  if (b < 1024)       return b + ' B';
+  if (b < 1024*1024)  return (b/1024).toFixed(1) + ' KB';
+  return (b/1024/1024).toFixed(2) + ' MB';
+}
+</script>
+</body>
+</html>

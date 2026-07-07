@@ -1,0 +1,65 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# ── Environment / secrets ─────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Temp pipeline files ───────────────────────────────────────────────────
+backend/tmp/uploads/
+backend/tmp/outputs/
+
+# Keep the tmp directory structure but not its contents
+!backend/tmp/uploads/.gitkeep
+!backend/tmp/outputs/.gitkeep
+
+# ── Node.js ───────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# ── Playwright ────────────────────────────────────────────────────────────
+# Chromium browser binaries are downloaded via `playwright install`
+# Do not commit them — they are hundreds of MB
+/ms-playwright/
+
+# ── OS / editor ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# ── Logs ──────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Coverage / test artifacts ─────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
