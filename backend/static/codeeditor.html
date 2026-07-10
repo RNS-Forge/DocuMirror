@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocuMirror Code Editor | RNS Solutions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- EJS for client-side rendering (load BEFORE Monaco to avoid AMD conflicts) -->
+<script src="https://cdn.jsdelivr.net/npm/ejs@3.1.9/ejs.min.js"></script>
+<!-- Load Monaco Editor JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f8fafc;
+    --surface2: #f1f5f9;
+    --border: #e2e8f0;
+    --border-hover: #cbd5e1;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --radius: 4px;
+    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; cursor: none; }
+  
+  body, html {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg);
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Custom Cursor */
+  .cursor-dot {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+  }
+  .cursor-outline {
+    position: fixed;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease-out, width 0.2s, height 0.2s;
+  }
+
+  /* Paper Background Animation */
+  .paper-bg {
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: 
+      linear-gradient(rgba(226, 232, 240, 0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(226, 232, 240, 0.4) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: -2;
+    pointer-events: none;
+    transform: rotate(-5deg);
+    animation: drift 60s linear infinite;
+  }
+  @keyframes drift {
+    0% { transform: rotate(-5deg) translateY(0); }
+    100% { transform: rotate(-5deg) translateY(40px); }
+  }
+
+  /* Layout */
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .logo-icon svg { width: 100%; height: 100%; }
+  
+  .header-brand {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+  }
+  
+  .btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: #e2e8f0; border-color: var(--accent); }
+  
+  .btn-primary {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+  }
+
+  /* Workspace */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Editor Pane */
+  .editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    min-width: 0;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--bg);
+  }
+
+  #editor-container {
+    flex: 1;
+    width: 100%;
+  }
+
+  /* Preview Pane */
+  .preview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface2);
+  }
+
+  .preview-header {
+    padding: 10px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .preview-content {
+    flex: 1;
+    padding: 16px;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+  }
+
+  #preview-frame {
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  a, button { cursor: none !important; }
+</style>
+</head>
+<body>
+
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-outline" id="cursor-outline"></div>
+
+<div class="paper-bg"></div>
+
+<div class="app-container">
+  <!-- Header -->
+  <header class="header">
+    <a href="/upload" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
+          <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
+          <path d="M26,0 L32,6 H26 Z" fill="#163aa3"/>
+          <rect x="15.25" y="4" width="1.5" height="24" rx="0.75" fill="#f6f7f9" opacity="0.9"/>
+        </svg>
+      </div>
+      <div>Code Editor</div>
+    </a>
+    <div class="header-brand">By RNS Solutions</div>
+    <div class="actions">
+      <button class="btn" id="btn-format">Format Code</button>
+      <button class="btn btn-primary" id="btn-run">Run Preview</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Editor Pane -->
+    <div class="editor-pane">
+      <div class="tabs">
+        <button class="tab active" data-file="template.ejs">template.ejs</button>
+        <button class="tab" data-file="data.json">data.json</button>
+      </div>
+      <div id="editor-container"></div>
+    </div>
+
+    <!-- Preview Pane -->
+    <div class="preview-pane">
+      <div class="preview-header">
+        <span>Live Preview</span>
+        <span id="render-status" style="font-weight: normal; font-size: 11px; color: var(--success);">Ready</span>
+      </div>
+      <div class="preview-content">
+        <iframe id="preview-frame" sandbox="allow-same-origin allow-scripts"></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Custom Cursor
+  const cursorDot = document.getElementById('cursor-dot');
+  const cursorOutline = document.getElementById('cursor-outline');
+
+  window.addEventListener('mousemove', function (e) {
+    const posX = e.clientX;
+    const posY = e.clientY;
+
+    cursorDot.style.left = `${posX}px`;
+    cursorDot.style.top = `${posY}px`;
+    
+    cursorOutline.style.left = `${posX}px`;
+    cursorOutline.style.top = `${posY}px`;
+  });
+
+  document.querySelectorAll('a, button, .tab').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursorOutline.style.width = '48px';
+      cursorOutline.style.height = '48px';
+      cursorOutline.style.backgroundColor = 'rgba(79, 70, 229, 0.1)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursorOutline.style.width = '32px';
+      cursorOutline.style.height = '32px';
+      cursorOutline.style.backgroundColor = 'transparent';
+    });
+  });
+
+  // State
+  let currentFile = 'template.ejs';
+  let files = {
+    'template.ejs': {
+      language: 'html',
+      content: localStorage.getItem('documirror_ejs') || '<!-- Upload a PDF to generate EJS -->\n<div class="document">\n  <h1><%= title || "Untitled" %></h1>\n</div>'
+    },
+    'data.json': {
+      language: 'json',
+      content: localStorage.getItem('documirror_json') || '{\n  "title": "Example Document"\n}'
+    }
+  };
+
+  let editor;
+
+  // Fix Monaco Web Worker CORS issue for rich language features (HTML/JSON auto-complete)
+  window.MonacoEnvironment = {
+    getWorkerUrl: function(workerId, label) {
+      return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+        self.MonacoEnvironment = {
+          baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/'
+        };
+        importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
+      `)}`;
+    }
+  };
+
+  // Initialize Monaco Editor
+  require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+  require(['vs/editor/editor.main'], function() {
+    editor = monaco.editor.create(document.getElementById('editor-container'), {
+      value: files[currentFile].content,
+      language: files[currentFile].language,
+      theme: 'vs-light',
+      automaticLayout: true,
+      minimap: { enabled: false },
+      fontSize: 13,
+      fontFamily: "'Fira Code', 'Consolas', monospace",
+      padding: { top: 16 },
+      autoClosingTags: true,
+      autoClosingBrackets: 'always',
+      formatOnType: true,
+      suggestOnTriggerCharacters: true
+    });
+
+    editor.onDidChangeModelContent((event) => {
+      files[currentFile].content = editor.getValue();
+
+      // Auto-close tags logic for EJS/HTML
+      if (currentFile === 'template.ejs' && event.changes.length > 0) {
+        const change = event.changes[0];
+        if (change.text === '>') {
+          const position = editor.getPosition();
+          const lineContent = editor.getModel().getLineContent(position.lineNumber);
+          const textBefore = lineContent.substring(0, position.column - 1);
+          
+          // Match the opening tag just before the cursor
+          const match = textBefore.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
+          if (match) {
+            const tag = match[1].toLowerCase();
+            const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+            
+            if (!voidElements.includes(tag)) {
+              const closingTag = `</${tag}>`;
+              
+              // Insert closing tag without pushing to undo stack as a separate action
+              editor.executeEdits("auto-close-tag", [{
+                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                text: closingTag,
+                forceMoveMarkers: true
+              }]);
+              
+              // Move cursor back inside
+              editor.setPosition(position);
+            }
+          }
+        }
+      }
+    });
+
+    renderPreview();
+  });
+
+  // Tabs logic
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+      
+      currentFile = e.target.dataset.file;
+      monaco.editor.setModelLanguage(editor.getModel(), files[currentFile].language);
+      editor.setValue(files[currentFile].content);
+    });
+  });
+
+  // Formatting
+  document.getElementById('btn-format').addEventListener('click', () => {
+    if (editor) {
+      editor.getAction('editor.action.formatDocument').run();
+    }
+  });
+
+  // Live Preview execution
+  document.getElementById('btn-run').addEventListener('click', () => {
+    renderPreview();
+  });
+
+  function renderPreview() {
+    const status = document.getElementById('render-status');
+    status.textContent = 'Rendering...';
+    status.style.color = 'var(--text-muted)';
+    
+    try {
+      const template = files['template.ejs'].content;
+      const dataStr = files['data.json'].content;
+      
+      let data = {};
+      if (dataStr.trim() !== '') {
+        data = JSON.parse(dataStr);
+      }
+      
+      const html = ejs.render(template, data);
+      
+      const iframe = document.getElementById('preview-frame');
+      iframe.srcdoc = html;
+      
+      status.textContent = 'Rendered successfully';
+      status.style.color = 'var(--success)';
+    } catch (err) {
+      console.error(err);
+      status.textContent = 'Error: ' + err.message;
+      status.style.color = '#dc2626';
+    }
+  }
+
+</script>
+</body>
+</html>

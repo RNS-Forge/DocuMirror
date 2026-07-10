@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Commercial Invoice</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 0;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .no-border {
+            border: none;
+        }
+
+        .no-border-bottom {
+            border-bottom: none;
+        }
+
+        .no-border-top {
+            border-top: none;
+        }
+
+        .no-border-right {
+            border-right: none;
+        }
+
+        .no-border-left {
+            border-left: none;
+        }
+    </style>
+</head>
+
+<body>
+    <% function formatDate(date) {
+        if (!date) return "";
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return "";
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+    } %>
+
+   <%
+function addressLine() {
+    return Array.from(arguments)
+        .filter(v => v && String(v).trim() !== "")
+        .join("<br>");
+}
+%>
+
+    <table>
+        <colgroup>
+            <col style="width:3%">  <!-- col 1 (Shipping Marks) -->
+            <col style="width:5%">  <!-- col 2 (Shipping Marks) -->
+
+            <col style="width:15%"> <!-- col 3 (Description) -->
+            <col style="width:3%">  <!-- col 4 (Description) -->
+            <col style="width:3%">  <!-- col 5 (Description) -->
+            <col style="width:3%">  <!-- col 6 (Description) -->
+            <col style="width:3%">  <!-- col 7 (Description) -->
+            <col style="width:3%">  <!-- col 8 (Description) -->
+            <col style="width:4%">  <!-- col 9 (Description) -->
+            <col style="width:4%">  <!-- col 10 (Description) -->
+
+            <col style="width:3%">  <!-- col 11 (PO Number) -->
+            <col style="width:3%">  <!-- col 12 (PO Number) -->
+            <col style="width:3%">  <!-- col 13 (PO Number) -->
+
+            <col style="width:3%">  <!-- col 14 (Style) -->
+            <col style="width:3%">  <!-- col 15 (Style) -->
+            <col style="width:3%">  <!-- col 16 (Style) -->
+
+            <col style="width:7%">  <!-- col 17 (Color) -->
+            <col style="width:7%">  <!-- col 18 (HSN) -->
+
+            <col style="width:4%">  <!-- col 19 (HTS) -->
+            <col style="width:3%">  <!-- col 20 (HTS) -->
+
+            <col style="width:5%">  <!-- col 21 (Quantity) -->
+            <col style="width:4%">  <!-- col 22 (Unit Price) -->
+            <col style="width:3%">  <!-- col 23 (Amount) -->
+            <col style="width:3%">  <!-- col 24 (Amount) -->
+        </colgroup>
+        <!-- TITLE -->
+        <tr>
+            <td colspan="24" class="title" style="border: none;">COMMERCIAL INVOICE</td>
+        </tr>
+
+        <!-- ROW: Shipper/Exporter | Invoice No & Date | Exporter Reference -->
+        <tr>
+            <td colspan="8">
+                Exporter:-
+                <br>
+                <span class="bold"><%= docs.exporterName || "" %></span>
+                <br>
+                <%- addressLine(
+                    docs.exporterAddress,
+                    docs.exporterCity,
+                    docs.exporterState,
+                    docs.exporterPincode,
+                    docs.exporterCountry
+                ) %>
+            </td>
+            <td colspan="3" class="no-border-right">
+                Invoice No.<br>
+                <%= docs.invoiceNumber || "" %>
+            </td>
+            <td colspan="5" class="no-border-left center">
+                Date<br>
+                <%= formatDate(docs.invoiceDate) %>
+            </td>
+            <td colspan="8">
+                Exporter Reference:<br>
+                IEC Number: <%= docs.iecNo || "" %><br>
+                AD Code: <%= docs.adCode || "" %><br>
+                GST Number: <%= docs.gstin || "" %><br>
+                LUT NO( ARN ) <%= docs.lutNo || "" %> DT <%= formatDate(docs.lutDate) %>
+            </td>
+        </tr>
+
+        <!-- ROW: Buyer/Consignee | Delivery Address | BL/Shipping Details | Shipper/Exporter Bank -->
+        <tr>
+            <td colspan="8">
+                Buyer Address:-
+                <br>
+                <span class="bold"><%= docs.buyerName || "" %></span>
+                <br>
+                <%- addressLine(
+                    docs.buyerAddress,
+                    docs.buyerCity,
+                    docs.buyerState,
+                    docs.buyerPincode,
+                    docs.buyerCountry
+                ) %>
+            </td>
+            <td colspan="8">
+                Delivery Address:-
+                <br>
+                <span class="bold"><%= docs.importerName || "" %></span>
+                <br>
+                <%- addressLine(
+                    docs.importerAddress,
+                    docs.importerCity,
+                    docs.importerState,
+                    docs.importerPincode,
+                    docs.importerCountry
+                ) %>
+            </td>
+            <td colspan="8">
+                Bank Details:-
+                <br>
+                ACCOUNT NAME: <%= docs.accountHolderName || "" %><br>
+                BANK: <%= docs.bankName || "" %><br>
+                ACCOUNT NO: <%= docs.accountNumber || "" %><br>
+                BRANCH: <%= docs.branchName || "" %><br>
+                SWIFT: <%= docs.swiftCode || "" %>
+            </td>
+        </tr>
+
+        <!-- ROW: Pre-Carriage | Place of Receipt | Country of Origin | Country of Final Destination -->
+        <tr>
+            <td colspan="5">Pre-Carriage By<br><%= docs.preCarriageBy || "" %></td>
+            <td colspan="5">Place of receipt by Pre Carrier<br><%= docs.placeOfReceipt || "" %></td>
+            <td colspan="8">Country of Origin<br><%= docs.originCountry || "" %></td>
+            <td colspan="6">Country of Final Destination<br><%= docs.destinationCountry || "" %></td>
+        </tr>
+
+        <!-- ROW: Vessel/Flight | Port of Loading | Payment Terms | Incoterms -->
+        <tr>
+            <td colspan="5">Vessel/Flight No<br><%= docs.vehicleRegistrationNumber || "" %></td>
+            <td colspan="5">Port of Loading<br><%= docs.portOfLoading || "" %></td>
+            <td colspan="8" class="no-border-right">Payment Terms<br><%= docs.paymentTerms || "" %></td>
+            <td colspan="6">Incoterms<br><span class="bold"><%= docs.inCoTerms || "" %></span></td>
+        </tr>
+
+        <!-- ROW: Port of Discharge | Final Destination -->
+        <tr>
+            <td colspan="5">Port of Discharge<br><%= docs.portOfDischarge || "" %></td>
+            <td colspan="5">Final Destination<br><%= docs.finalDestination || "" %></td>
+            <td colspan="14">
+                LUT NO: (ARN) <%= docs.lutNo2 || "" %> DT <%= formatDate(docs.lutDate2) %><br>
+            </td>
+        </tr>
+
+        <!-- ITEMS HEADER -->
+        <tr>
+            <th style="font-weight: normal;" colspan="2">Shipping Marks & Numbers</th>
+            <th style="font-weight: normal;" colspan="8">Description of Goods</th>
+            <th style="font-weight: normal;" colspan="3">Purchase Order Number</th>
+            <th style="font-weight: normal;" colspan="3">Style <br> Number / Name</th>
+            <th style="font-weight: normal;" colspan="1">Color <br> Name</th>
+            <th style="font-weight: normal;" colspan="1">HSN <br> Code</th>
+            <th style="font-weight: normal;" colspan="2">HTS<br> Code</th>
+            <th style="font-weight: normal;">Quantity in PCS</th>
+            <th style="font-weight: normal;">Unit Price in <%= docs.currency || "" %></th>
+            <th style="font-weight: normal;" colspan="2">Amount in <%= docs.currency || "" %></th>
+        </tr>
+
+        <tr>
+        <td colspan="2" style="border-bottom:none;border-top:none;">&nbsp;</td><td style="border-bottom:none;border-top:none;border-right:none;" colspan="6"></td><td colspan="2" style="border-bottom:none;border-top:none;border-left:none;text-align:center;font-weight:bold;">Size</td><td style="border-bottom:none;border-top:none;" colspan="3"></td><td style="border-bottom:none;border-top:none;" colspan="3"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="2"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="2"></td>
+        </tr>
+
+        <!-- ITEMS ROWS -->
+        <% if (docs.listOfItems && docs.listOfItems.length > 0) { %>
+            <% docs.listOfItems.forEach((item, index) => { %>
+                <tr class="center">
+                    <td class="no-border-bottom no-border-top" colspan="2">
+                        <%= item.marksAndNumbers || "" %>
+                    </td>
+                    <td colspan="6" class="no-border-bottom no-border-top no-border-right" style="text-align: left;">
+                        <%= item.descriptionOfGoods || "" %>
+                    </td>
+                    <td colspan="2" class="no-border-bottom no-border-top no-border-left">
+                        <%= item.size || "" %>
+                    </td>
+                    <td class="no-border-bottom no-border-top" colspan="3">
+                        <%= item.purchaseOrderNumber || "" %>
+                    </td>
+                    <td class="no-border-bottom no-border-top" colspan="3">
+                        <%= item.styleNumber || "" %>
+                    </td>
+                    <td class="no-border-bottom no-border-top" colspan="1">
+                        <%= item.colorName || "" %>
+                    </td>
+                    <td class="no-border-bottom no-border-top" colspan="1">
+                        <%= item.hsnCode || "" %>
+                    </td>
+                    <td class="no-border-bottom no-border-top" colspan="2">
+                        <%= item.htsCode || "" %>
+                    </td>
+                    <td class="no-border-bottom no-border-top">
+                        <%= item.quantity || 0 %>
+                    </td>
+                    <td class="right no-border-bottom no-border-top">
+                        <%= docs.currencySymbol || "" %> <%= Number(item.unitPrice || 0).toFixed(2) %>
+                    </td>
+                    <td class="right no-border-bottom no-border-top" colspan="2">
+                        <%= docs.currencySymbol || "" %> <%= Number(item.amount || 0).toFixed(2) %>
+                    </td>
+                </tr>
+            <% }); %>
+        <% } %>
+
+
+        <tr>
+        <td colspan="2" style="border-bottom:none;border-top:none;">&nbsp;</td><td style="border-bottom:none;border-top:none;" colspan="8"></td><td style="border-bottom:none;border-top:none;" colspan="3"></td><td style="border-bottom:none;border-top:none;" colspan="3"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="2"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="2"></td>
+        </tr>
+        <tr>
+        <td colspan="2" style="border-bottom:none;border-top:none;"></td><td colspan="18" style="border-bottom:none;border-top:none;">               IGCR # <%= docs.igcr || "" %>, BOND # <%= docs.bond || "" %>,BOE # <%= docs.boe || "" %>
+</td><td colspan="1" style="border-bottom:none;border-top:none;"></td><td colspan="1" style="border-bottom:none;border-top:none;"></td><td colspan="2" style="border-bottom:none;border-top:none;"></td>
+        </tr>
+        <tr>
+        <td colspan="2" style="border-bottom:none;border-top:none;">&nbsp;</td><td style="border-bottom:none;border-top:none;" colspan="8"></td><td style="border-bottom:none;border-top:none;" colspan="3"></td><td style="border-bottom:none;border-top:none;" colspan="3"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="2"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="1"></td><td style="border-bottom:none;border-top:none;" colspan="2"></td>
+        </tr>
+
+        <!-- TOTAL ROW -->
+        <tr class="center">
+            <td colspan="2">&nbsp;</td>
+            <td colspan="8"></td>
+            <td colspan="3"></td>
+            <td colspan="3"></td>
+            <td colspan="1"></td>
+            <td colspan="1"></td>
+            <td class="right" colspan="2">Total:-</td>
+            <td><%= docs.totalQuantity || 0 %></td>
+            <td class="right">Total:-</td>
+            <td class="right" colspan="2">
+                <%= docs.currencySymbol || "" %> <%= Number(docs.totalAmount || 0).toFixed(2) %>
+            </td>
+        </tr>
+
+        <!-- AMOUNT IN WORDS ROW -->
+        <tr>
+            <td colspan="20">
+                Amount in words <%= docs.currency || "" %>:
+                <span style="margin-left: 100px;"><%= docs.amountInWords || "" %></span>
+            </td>
+            <td colspan="4" class="no-border-bottom">For <%= docs.exporterName || "" %></td>
+        </tr>
+
+        <!-- STATEMENT OF ORIGIN / PACKING DETAILS -->
+        <tr>
+            <td colspan="16" rowspan="5">
+                <br><br><br><br><br><br><br><br><br>
+                <span class="bold">Declaration :</span><br>
+                We declare that this Invoice shows the actual price of the goods described and that all particulars are
+                true and correct.
+            </td>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">Total Packages:</td>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">
+                <%= docs.totalNumberOfPackages || 0 %>
+            </td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom">
+                <%= docs.dimension || "" %>
+            </td>
+            <td colspan="4" rowspan="5" class="no-border-top" style="vertical-align: bottom; height: 80px;">
+                Authorised Signatory
+            </td>
+        </tr>
+        <tr>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">Carton Dimension:</td>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">
+                <%= docs.dimension || "" %>
+            </td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom">
+                In CM
+            </td>
+        </tr>
+        <tr>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">Net Weight:</td>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">
+                <%= Number(docs.totalNetWeight || 0).toFixed(2) %>
+            </td>
+            <td colspan="2" class="no-border-top no-border-bottom no-border-left">Kgs</td>
+        </tr>
+        <tr>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">Gross Weight:</td>
+            <td class="no-border-top no-border-right no-border-left no-border-bottom">
+                <%= Number(docs.totalGrossWeight || 0).toFixed(2) %>
+            </td>
+            <td colspan="2" class="no-border-top no-border-bottom no-border-left">Kgs</td>
+        </tr>
+        <tr>
+            <td class="no-border-top no-border-right">CBM:</td>
+            <td class="no-border-top no-border-left no-border-right">
+                <%= Number(docs.cbm || 0).toFixed(2) %>
+            </td>
+            <td colspan="2" class="no-border-top no-border-left">CBM</td>
+        </tr>
+    </table>
+</body>
+
+</html>

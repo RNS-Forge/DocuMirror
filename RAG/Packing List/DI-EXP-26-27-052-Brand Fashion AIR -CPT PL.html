@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Packing List - <%= docs.invoiceNumber %></title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 5mm;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 7px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      table-layout: fixed;
+    }
+    table.outer {
+      border: 1px solid #000;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 2px 3px;
+      word-break: break-word;
+    }
+    th.title-row {
+      text-align: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    td.no-border, th.no-border {
+      border: none;
+    }
+    td.label {
+      font-weight: bold;
+    }
+    td.right {
+      text-align: right;
+    }
+    td.center {
+      text-align: center;
+    }
+   
+    th.groupHeader {
+      text-align: center;
+    }
+    tr.total-row td {
+      font-weight: bold;
+    }
+    tr.grandtotal-row td {
+      font-weight: bold;
+    }
+    th{
+        text-align:center;
+    }
+  </style>
+</head>
+<body>
+  <% function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } %>
+
+  <table class="outer">
+    <!-- Title -->
+    <tr>
+      <th class="title-row" colspan="23">PACKING LIST</th>
+    </tr>
+
+    <!-- Exporter / Consignee (Importer) / Delivery (Buyer) Address Block -->
+    <tr>
+      <td class="no-border label" colspan="9" style="border-right:1px solid #000;">Exporter:-</td>
+      <td class="no-border label" colspan="9" style="border-right:1px solid #000;">Consignee:-</td>
+      <td class="no-border label" colspan="4">DELIVERY ADDRESS:-</td>
+    </tr>
+    <tr>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.exporterName %></td>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.importerName %></td>
+      <td class="no-border" colspan="4"><%= docs.buyerName %></td>
+    </tr>
+    <tr>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.exporterAddress %></td>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.importerAddress %></td>
+      <td class="no-border" colspan="4"><%= docs.buyerAddress %></td>
+    </tr>
+    <tr>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.exporterCity %></td>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.importerCity %></td>
+      <td class="no-border" colspan="4"><%= docs.buyerCity %></td>
+    </tr>
+    <tr>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.exporterState %> <%= docs.exporterCountry %></td>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"><%= docs.importerCountry %></td>
+      <td class="no-border" colspan="4"><%= docs.buyerCountry %></td>
+    </tr>
+    <tr>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;"></td>
+      <td class="no-border" colspan="9" style="border-right:1px solid #000;">EORI No. <%= docs.eori %></td>
+      <td class="no-border" colspan="4"></td>
+    </tr>
+
+    <!-- Consignee / Shipment Details / Totals Block -->
+    <tr style="border:1px solid; border-bottom:none;">
+      <td class="no-border label" colspan="2">Consignee:</td>
+      <td class="no-border" colspan="7"><%= docs.importerName %></td>
+      <td class="no-border highlight" colspan="6">HAWB Number:</td>
+      <td class="no-border highlight" colspan="3"><%= docs.hawbNumber %></td>
+      <td class="no-border label right" colspan="2">Total Qty</td>
+      <td class="no-border">:</td>
+      <td class="no-border right" colspan="1"><%= docs.totalQuantity %> Pcs</td>
+    </tr>
+    <tr>
+      <td class="no-border label" colspan="2">Invoice No:</td>
+      <td class="no-border" colspan="7"><%= docs.invoiceNumber %></td>
+      <td class="no-border highlight" colspan="6">MAWB Number:</td>
+      <td class="no-border highlight" colspan="3"><%= docs.mawbNumber %></td>
+      <td class="no-border label right" colspan="2">Total Net Wt.</td>
+      <td class="no-border">:</td>
+      <td class="no-border right" colspan="1"><%= docs.totalNetWeight.toFixed(2) %> Kgs</td>
+    </tr>
+    <tr>
+      <td class="no-border label" colspan="2">Date:</td>
+      <td class="no-border" colspan="7"><%= formatDate(docs.invoiceDate) %></td>
+      <td class="no-border highlight" colspan="6">ETD (POL):</td>
+      <td class="no-border highlight" colspan="3"><%= formatDate(docs.etdDate) %></td>
+      <td class="no-border label right" colspan="2">Total Gross Wt.:</td>
+      <td class="no-border"></td>
+      <td class="no-border right" colspan="1"><%= docs.totalGrossWeight.toFixed(2) %> Kgs</td>
+    </tr>
+    <tr>
+      <td class="no-border label" colspan="2">PO Number:</td>
+      <td class="no-border" colspan="7"><%= docs.purchaseOrderNumber %></td>
+      <td class="no-border highlight" colspan="6">ETA (POD):</td>
+      <td class="no-border highlight" colspan="3"><%= formatDate(docs.etaDate) %></td>
+      <td class="no-border label right" colspan="2">Total Pkg</td>
+      <td class="no-border">:</td>
+      <td class="no-border right" colspan="1"><%= docs.noOfCartons %> Ctns</td>
+    </tr>
+    <tr>
+      <td class="no-border label" colspan="2">Style No:</td>
+      <td class="no-border" colspan="7"><%= docs.styleNumber %></td>
+      <td class="no-border highlight" colspan="6">Container No.:</td>
+      <td class="no-border highlight" colspan="3"><%= docs.containerNo %></td>
+      <td class="no-border label right" colspan="2">Total Volume</td>
+      <td class="no-border">:</td>
+      <td class="no-border right" colspan="1"><%= docs.totalCBM.toFixed(2) %> CBM</td>
+    </tr>
+    <tr>
+      <td class="no-border" colspan="9"></td>
+      <td class="no-border highlight" colspan="6">Shipped on Board:</td>
+      <td class="no-border highlight" colspan="3"><%= formatDate(docs.boardDate) %></td>
+      <td class="no-border" colspan="5"></td>
+    </tr>
+    <tr>
+      <td class="no-border label" colspan="2">Content:</td>
+      <td class="no-border" colspan="7"><%= docs.content %></td>
+      <td class="no-border highlight" colspan="6">Container Size:</td>
+      <td class="no-border highlight" colspan="3"><%= docs.containerSizeAndType %></td>
+      <td class="no-border" colspan="5"></td>
+    </tr>
+
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+
+  <colgroup>
+    <!-- Carton Serial Numbers -->
+    <col style="width:3%;">
+    <col style="width:1.5%;">
+    <col style="width:3%;">
+
+    <!-- Remaining Columns -->
+    <col style="width:5%;">
+    <col style="width:8%;">
+    <col style="width:6%;">
+    <col style="width:10%;">
+    <col style="width:6%;">
+
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+    <col style="width:2%;">
+
+    <col style="width:5%;">
+    <col style="width:5%;">
+    <col style="width:8%;">
+    <col style="width:5%;">
+    <col style="width:5%;">
+    <col style="width:5%;">
+  </colgroup>
+
+  <!-- Header -->
+  <tr>
+    <th colspan="3">Carton Serial Numbers</th>
+    <th>Total<br>Number of<br>Cartons</th>
+    <th>Purchase Order No.</th>
+    <th>ARTICLE<br>NUMBER</th>
+    <th>Style Number</th>
+    <th>Color Name</th>
+    <th>XS</th>
+    <th>S</th>
+    <th>M</th>
+    <th>L</th>
+    <th>XL</th>
+    <th>XXL</th>
+    <th>3XL</th>
+    <th>4XL</th>
+    <th>OS</th>
+    <th>Quantity<br>Per<br>Cartons</th>
+    <th>Total<br>Quantity</th>
+    <th>Carton<br>Dimension in<br>Cms</th>
+    <th>Total Net Weight<br>in Kgs</th>
+    <th>Total Gross<br>Weight in<br>Kgs</th>
+    <th>CBM</th>
+  </tr>
+<% const totalQuantity = docs.listOfItems.reduce((sum, item) => sum + (item.quantity || 0), 0); %>
+  <!-- Data -->
+  <% docs.listOfItems.forEach(function(item) { %>
+  <tr>
+    <td class="center"><%= item.cartonSerialStart %></td>
+
+    <td class="center"
+        style="padding:0;text-align:center;white-space:nowrap;">
+        TO
+    </td>
+
+    <td class="center"><%= item.cartonSerialEnd %></td>
+
+    <td class="center"><%= item.cartonNo %></td>
+    <td class="center"><%= item.poNumber %></td>
+    <td class="center"><%= item.articleNumber %></td>
+    <td class="center" style="white-space: nowrap;"><%= item.styleNumber %></td>
+    <td><%= item.color %></td>
+    <td class="center"><%= item.sizeXs %></td>
+    <td class="center"><%= item.sizeS %></td>
+    <td class="center"><%= item.sizeM %></td>
+    <td class="center"><%= item.sizeL %></td>
+    <td class="center"><%= item.sizeXl %></td>
+    <td class="center"><%= item.sizeXxl %></td>
+    <td class="center"><%= item.sizeXxxxl %></td>
+    <td class="center"><%= item.sizeXxxxl %></td>
+    <td class="center"><%= item.overSize %></td>
+    <td class="center"><%= item.noOfPcs %></td>
+    <td class="center"><%= item.quantity %></td>
+    <td class="center"><%= item.cartonDimension %></td>
+    <td class="right"><%= item.netWeight.toFixed(2) %></td>
+    <td class="right"><%= item.grossWeight.toFixed(2) %></td>
+    <td class="right"><%= item.cbm.toFixed(2) %></td>
+  </tr>
+  <% }); %>
+
+  <!-- Blank Row -->
+  <tr>
+    <td>&nbsp</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+  </tr>
+
+  <!-- TOTAL -->
+  <tr class="total-row">
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="center"><%= docs.noOfCartons %></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td style="text-align:center;font-weight:bold;">TOTAL</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="center"><%= totalQuantity %></td>
+    <td></td>
+    <td class="right"><%= docs.totalNetWeight.toFixed(2) %></td>
+    <td class="right"><%= docs.totalGrossWeight.toFixed(2) %></td>
+    <td class="right"><%= docs.totalCBM.toFixed(2) %></td>
+  </tr>
+<!-- Blank Row -->
+  <tr>
+    <td>&nbsp</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+  </tr>
+  <!-- TOTAL -->
+  <tr class="total">
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="center"><%= docs.noOfCartons %></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="center"><%= totalQuantity %></td>
+    <td></td>
+    <td class="right"><%= docs.totalNetWeight.toFixed(2) %></td>
+    <td class="right"><%= docs.totalGrossWeight.toFixed(2) %></td>
+    <td class="right"><%= docs.totalCBM.toFixed(2) %></td>
+  </tr>
+
+</table>
+
+    <!-- Declaration / Signatory Block -->
+    <tr>
+  <td colspan="10" style="padding:0;">
+    <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+      <tr>
+        <!-- Statement (80%) -->
+        <td style="width:70%; vertical-align:top; padding-right:15px;">
+          <span style="font-weight:bold;">Statement of Origin:</span>
+          <br><br>
+          The exporter INREX0713012480TC003 of the products covered by this document declares that, except where otherwise clearly indicated, these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of European Union - and that the origin criterion met is "W"-HSN -6211.
+        </td>
+
+        <!-- Signature (20%) -->
+        <td style="width:20%; vertical-align:top; text-align:left;">
+          <table style="width:100%; border:none;">
+            <tr>
+              <td class="no-border" style="border:none;">
+                For <%= docs.exporterName %>
+              </td>
+            </tr>
+            <tr>
+              <td class="no-border" style="border:none; height:60px;"></td>
+            </tr>
+            <tr>
+              <td class="no-border" style="border:none;">
+                Authorised Signatory
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+  </table>
+</body>
+</html>

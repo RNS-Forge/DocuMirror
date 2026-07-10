@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Packing List</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8px;
+            margin: 0;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td, th {
+            border: 1px solid #000;
+            padding: 3px 2px;
+            vertical-align: middle;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px 0;
+        }
+
+        .header-yellow {
+            font-weight: bold;
+        }
+
+        .row-green {
+            font-weight: bold;
+        }
+
+        .row-gold {
+            font-weight: bold;
+        }
+
+        .bold { font-weight: bold; }
+        .left { text-align: left; }
+        .right { text-align: right; }
+        .center { text-align: center; }
+    </style>
+</head>
+
+<body>
+    <%
+        // Helper function to format address lines
+        function addressLine() {
+            return Array.from(arguments)
+                .filter(v => v && String(v).trim() !== "")
+                .join(", ");
+        }
+
+        // Helper function to format address with separate lines for pincode, country, etc.
+        function formatAddress(name, address, city, state, pincode, country) {
+            const lines = [];
+            if (name) lines.push(name);
+            if (address) lines.push(address);
+            if (city || state) lines.push(addressLine(city, state));
+            if (pincode || country) lines.push(addressLine(pincode, country));
+            return lines.join("<br>");
+        }
+    %>
+
+    <table>
+        <!-- Define column widths using colgroup -->
+        <colgroup>
+           
+            <col style="width: 3%;"> <!-- Shipping Marks 2 -->
+            <col style="width: 2%;"> <!-- Shipping Marks 3 -->
+            <col style="width: 3%;"> <!-- PO Number -->
+            <col style="width: 10%;"> <!-- Style No. -->
+            <col style="width: 6%;"> <!-- Style Name -->
+            <col style="width: 8%;"> <!-- Color Code & Name -->
+            <col style="width: 8%;"> <!-- SHADE -->
+            <col style="width: 4%;"> <!-- XS -->
+            <col style="width: 3%;"> <!-- S -->
+            <col style="width: 3%;"> <!-- M -->
+            <col style="width: 3%;"> <!-- L -->
+            <col style="width: 3%;"> <!-- XL -->
+            <col style="width: 3%;"> <!-- XXL -->
+            <col style="width: 3%;"> <!-- No of Pcs / Ctns -->
+            <col style="width: 5%;"> <!-- No of Cartons -->
+            <col style="width: 5%;"> <!-- Total Pcs -->
+            <col style="width: 6%;"> <!-- Carton Dimension -->
+            <col style="width: 6%;"> <!-- Net Weight -->
+            <col style="width: 6%;"> <!-- Gross Weight -->
+            <col style="width: 6%;"> <!-- CBM -->
+        </colgroup>
+
+        <!-- Title Row -->
+        <tr>
+            <td colspan="21" class="title">PACKING LIST</td>
+        </tr>
+
+        <!-- Header Section -->
+        <tr>
+            <td colspan="5" class="left" style="vertical-align: top;">
+                <span class="bold">Exporter:-</span><br>
+                <%= formatAddress(
+                    docs.exporterName,
+                    docs.exporterAddress,
+                    docs.exporterCity,
+                    docs.exporterState,
+                    docs.exporterPincode,
+                    docs.exporterCountry
+                ) %>
+            </td>
+
+            <td colspan="5" class="left" style="vertical-align: top;">
+                <span class="bold">Buyer</span><br>
+                <%= formatAddress(
+                    docs.buyerName,
+                    docs.buyerAddress,
+                    docs.buyerCity,
+                    docs.buyerState,
+                    docs.buyerPincode,
+                    docs.buyerCountry
+                ) %><br>
+                <% if (docs.eoriNumber) { %>
+                    EORI No. <%= docs.eoriNumber %>
+                <% } %>
+            </td>
+
+            <td colspan="5" class="left" style="vertical-align: top;">
+                <span class="bold">Consignee /Delivery address</span><br>
+                <%= formatAddress(
+                    docs.importerName,
+                    docs.importerAddress,
+                    docs.importerCity,
+                    docs.importerState,
+                    docs.importerPincode,
+                    docs.importerCountry
+                ) %>
+            </td>
+
+            <td colspan="6" class="right" style="vertical-align: top; padding: 0;">
+                <table style="width: 100%; border: none;">
+                    <tr>
+                        <td class="left" style="border: none; padding: 3px 5px;">
+                            Invoice no. &nbsp;&nbsp;<%= docs.invoiceNumber || "" %>
+                        </td>
+                        <td class="right" style="border: none; padding: 3px 5px;">
+                            Date: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= docs.invoiceDate ? new Date(docs.invoiceDate).toLocaleDateString() : "" %>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="right" style="border: none; padding: 5px;">
+                            Total Quantity &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <%= docs.totalQuantity %> Pcs<br>
+                            Total Number of Cartons &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <%= docs.totalNumberOfPackages %> Ctns<br>
+                            Total Net Weight &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <%= Number(docs.totalNetWeight || 0).toFixed(2) %> Kgs<br>
+                            Total Gross Weight &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <%= Number(docs.totalGrossWeight || 0).toFixed(2) %> Kgs
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Main Table Header -->
+        <tr class="header-yellow">
+            <th colspan="3">Shipping Marks &<br>Numbers</th>
+            <th>PO Number</th>
+            <th>Style No.</th>
+            <th>Style Name</th>
+            <th>Color Code & Name</th>
+            <th>SHADE</th>
+            <th>XS</th>
+            <th>S</th>
+            <th>M</th>
+            <th>L</th>
+            <th>XL</th>
+            <th>XXL</th>
+            <th>No of Pcs /<br>Ctns</th>
+            <th>No of<br>Cartons</th>
+            <th>Total Pcs</th>
+            <th>Carton<br>Dimension in<br>Cms</th>
+            <th>Total Net<br>Weight in Kgs</th>
+            <th>Total Gross<br>Weight in Kgs</th>
+            <th>Total CBM</th>
+        </tr>
+
+        <%
+            // Group items by shade
+            const groups = {};
+            const groupOrder = [];
+            docs.listOfItems.forEach(function(item) {
+                const key = item.shade || item.purchaseOrderNumber || 'group';
+                if (!groups[key]) {
+                    groups[key] = [];
+                    groupOrder.push(key);
+                }
+                groups[key].push(item);
+            });
+        %>
+
+        <% groupOrder.forEach(function(groupKey) {
+            const groupItems = groups[groupKey];
+
+            // Subtotals for the group
+            let gXS = 0, gS = 0, gM = 0, gL = 0, gXL = 0, gXXL = 0;
+            let gCartons = 0, gTotalPcs = 0, gNet = 0, gGross = 0, gCbm = 0;
+
+            groupItems.forEach(function(it) {
+                gXS += Number(it.sizeXs || 0);
+                gS += Number(it.sizeS || 0);
+                gM += Number(it.sizeM || 0);
+                gL += Number(it.sizeL || 0);
+                gXL += Number(it.sizeXl || 0);
+                gXXL += Number(it.sizeXxl || 0);
+                gCartons += Number(it.numberOfPackages || 0);
+                gTotalPcs += Number(it.quantity || 0);
+                gNet += Number(it.netWeight || 0);
+                gGross += Number(it.grossWeight || 0);
+                gCbm += Number(it.cbm || 0);
+            });
+        %>
+
+            <% groupItems.forEach(function(item) { %>
+            <tr>
+                <td><%= item.cartonSerialStart || "" %></td>
+                <td>to</td>
+                <td><%= item.cartonSerialEnd || "" %></td>
+                <td><%= item.purchaseOrderNumber || "" %></td>
+                <td><%= item.styleNumber || "" %></td>
+                <td><%= item.styleName || "" %></td>
+                <td><%= item.colorCodeName || "" %></td>
+                <td><%= item.shade || "" %></td>
+                <td><%= item.sizeXs || "" %></td>
+                <td><%= item.sizeS || "" %></td>
+                <td><%= item.sizeM || "" %></td>
+                <td><%= item.sizeL || "" %></td>
+                <td><%= item.sizeXl || "" %></td>
+                <td><%= item.sizeXxl || "" %></td>
+                <td><%= item.noOfPcs || "" %></td>
+                <td><%= item.numberOfPackages || "" %></td>
+                <td><%= item.quantity || "" %></td>
+                <td><%= item.cartonDimension || "" %></td>
+                <td><%= item.netWeight ? Number(item.netWeight).toFixed(2) : "" %></td>
+                <td><%= item.grossWeight ? Number(item.grossWeight).toFixed(2) : "" %></td>
+                <td><%= item.cbm ? Number(item.cbm).toFixed(2) : "" %></td>
+            </tr>
+            <% }); %>
+
+            <!-- Subtotal row for the group -->
+            <tr class="row-green">
+                <td colspan="8"></td>
+                <td><%= gXS %></td>
+                <td><%= gS %></td>
+                <td><%= gM %></td>
+                <td><%= gL %></td>
+                <td><%= gXL %></td>
+                <td><%= gXXL %></td>
+                <td></td>
+                <td><%= gCartons %></td>
+                <td><%= gTotalPcs %></td>
+                <td></td>
+                <td><%= gNet ? gNet.toFixed(2) : "" %></td>
+                <td><%= gGross ? gGross.toFixed(2) : "" %></td>
+                <td><%= gCbm ? gCbm.toFixed(2) : "" %></td>
+            </tr>
+        <% }); %>
+
+        <!-- Grand total row -->
+        <tr class="row-gold">
+            <td colspan="8"></td>
+            <td><%= docs.totalXs %></td>
+            <td><%= docs.totalS %></td>
+            <td><%= docs.totalM %></td>
+            <td><%= docs.totalL %></td>
+            <td><%= docs.totalXl %></td>
+            <td><%= docs.totalXxl %></td>
+            <td></td>
+            <td><%= docs.totalNumberOfPackages %></td>
+            <td><%= docs.totalQuantity %></td>
+            <td></td>
+            <td><%= Number(docs.totalNetWeight || 0).toFixed(2) %></td>
+            <td><%= Number(docs.totalGrossWeight || 0).toFixed(2) %></td>
+            <td><%= Number(docs.totalCBM || 0).toFixed(2) %></td>
+        </tr>
+
+        <!-- Footer Row -->
+        <tr>
+            <td colspan="15" class="left" style="vertical-align: top; height: 50px;">
+                <span class="bold">Statement of Origin:</span> The exporter INREX0713012480TC003 of the products covered by this document declares that, except where otherwise clearly indicated, these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of European Union - and that the origin criterion met is “P”
+            </td>
+            <td colspan="6" class="left" style="vertical-align: bottom; height: 50px;">
+                <span style="display:block; padding-bottom: 25px;">For <%= docs.exporterName || "" %></span>
+                Authorised Signatory
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

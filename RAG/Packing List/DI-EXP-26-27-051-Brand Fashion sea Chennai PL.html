@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Packing List - <%= docs.invoiceNumber %></title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 5mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8px;
+      color: #000;
+      padding: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    td, th {
+      border: 1px solid #000;
+      padding: 2px 3px;
+      vertical-align: middle;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* Title Row */
+    .title-row td {
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 3px;
+      border: 1px solid #000;
+      border-bottom: none;
+    }
+
+    /* Top 3-Column Header */
+    #headerTop td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 3px 5px;
+    }
+
+    .hdr-label {
+      font-weight: bold;
+      font-size: 8.5px;
+    }
+
+    /* Meta Grid */
+    #metaGrid td {
+      border: none;
+      vertical-align: top;
+      padding: 2px 4px;
+      font-size: 7.5px;
+    }
+
+    .meta-key {
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .meta-val {
+      padding-left: 6px;
+    }
+
+    /* Summary Box */
+    .sum-label {
+      text-align: left;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .sum-colon {
+      text-align: center;
+      width: 8px;
+    }
+
+    .sum-val {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .sum-unit {
+      text-align: left;
+      padding-left: 3px;
+    }
+
+    /* Main Table Header */
+    #mainTable thead th {
+      font-weight: bold;
+      font-size: 7px;
+      text-align: center;
+      line-height: 1.2;
+      padding: 3px 2px;
+      vertical-align: middle;
+    }
+
+    /* Main Table Body */
+    #mainTable tbody td {
+      text-align: center;
+      font-size: 7.5px;
+    }
+
+    /* Total Rows */
+    .total-row td {
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .grand-row td {
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* Footer */
+    #footerTable td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 5px 8px;
+      font-size: 8px;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .right {
+      text-align: right !important;
+    }
+
+    td.no-border, th.no-border {
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+  <% function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } %>
+
+  <!-- Title Row -->
+  <table>
+    <tr class="title-row">
+      <td>PACKING LIST</td>
+    </tr>
+  </table>
+
+  <!-- Top 3-Column Header -->
+  <table id="headerTop">
+    <colgroup>
+      <col style="width: 33.33%">
+      <col style="width: 33.33%">
+      <col style="width: 33.33%">
+    </colgroup>
+    <tr>
+      <td>
+        <span class="hdr-label">Exporter:-</span><br />
+        <%= docs.exporterName %>,<br />
+        <%= docs.exporterAddress %>,<br />
+        <%= docs.exporterCity %>, <%= docs.exporterState %> - <%= docs.exporterPincode %>,<br />
+        <%= docs.exporterCountry %>
+      </td>
+      <td>
+        <span class="hdr-label">Consignee:-</span><br />
+        <%= docs.importerName %><br />
+        <%= docs.importerAddress %><br />
+        <%= docs.importerCity %>, <%= docs.importerCountry %><br />
+        EORI No. <%= docs.eori %>
+      </td>
+      <td>
+        <span class="hdr-label">DELIVERY ADDRESS:-</span><br />
+        <%= docs.buyerName %><br />
+        <%= docs.buyerAddress %><br />
+        <%= docs.buyerCity %>, <%= docs.buyerCountry %>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Meta Grid -->
+  <table id="metaGrid">
+    <colgroup>
+      <col style="width: 8%">
+      <col style="width: 27%">
+      <col style="width: 9%">
+      <col style="width: 18%">
+      <col style="width: 17%">
+      <col style="width: 7%">
+      <col style="width: 2%">
+      <col style="width: 6%">
+      <col style="width: 5%">
+    </colgroup>
+    <tr style="border-left: 1px solid; border-right: 1px solid;">
+      <td class="meta-key">Consignee:</td>
+      <td class="meta-val"><%= docs.importerName %></td>
+      <td class="meta-key">BL Number:</td>
+      <td colspan="2" class="meta-val"><%= docs.billOfLadingNumber %></td>
+      <td class="sum-label">Total Qty</td>
+      <td class="sum-colon">:</td>
+      <td class="sum-val"><%= docs.totalQuantity %></td>
+      <td class="sum-unit">Pcs</td>
+    </tr>
+    <tr style="border-left: 1px solid; border-right: 1px solid;">
+      <td class="meta-key">Invoice No:</td>
+      <td class="meta-val"><%= docs.invoiceNumber %></td>
+      <td class="meta-key">Mother Vessel:</td>
+      <td colspan="2" class="meta-val"><%= docs.motherVessel %></td>
+      <td class="sum-label">Total Net Wt.</td>
+      <td class="sum-colon">:</td>
+      <td class="sum-val"><%= docs.totalNetWeight.toFixed(2) %></td>
+      <td class="sum-unit">Kgs</td>
+    </tr>
+    <tr style="border-left: 1px solid; border-right: 1px solid;">
+      <td class="meta-key">Date:</td>
+      <td class="meta-val"><%= formatDate(docs.invoiceDate) %></td>
+      <td class="meta-key">ETD (POL):</td>
+      <td colspan="2" class="meta-val"><%= formatDate(docs.etdDate) %></td>
+      <td class="sum-label">Total Gross Wt.</td>
+      <td class="sum-colon">:</td>
+      <td class="sum-val"><%= docs.totalGrossWeight.toFixed(2) %></td>
+      <td class="sum-unit">Kgs</td>
+    </tr>
+    <tr style="border-left: 1px solid; border-right: 1px solid;">
+      <td class="meta-key">PO Number:</td>
+      <td class="meta-val"><%= docs.purchaseOrderNumber %></td>
+      <td class="meta-key">ETA (POD):</td>
+      <td colspan="2" class="meta-val"><%= formatDate(docs.etaDate) %></td>
+      <td class="sum-label">Total Pkg</td>
+      <td class="sum-colon">:</td>
+      <td class="sum-val"><%= docs.noOfCartons %></td>
+      <td class="sum-unit">Ctns</td>
+    </tr>
+    <tr style="border-left: 1px solid; border-right: 1px solid;">
+      <td class="meta-key">Style No:</td>
+      <td class="meta-val"><%= docs.styleNumber %></td>
+      <td class="meta-key">Container No.:</td>
+      <td colspan="2" class="meta-val"><%= docs.containerNo %></td>
+      <td class="sum-label">Total Volume</td>
+      <td class="sum-colon">:</td>
+      <td class="sum-val"><%= docs.totalCBM.toFixed(2) %></td>
+      <td class="sum-unit">CBM</td>
+    </tr>
+    <tr style="border-left: 1px solid; border-right: 1px solid;">
+      <td class="meta-key">Content:</td>
+      <td class="meta-val"><%= docs.content %></td>
+      <td class="meta-key">Shipped on Board date:</td>
+      <td class="meta-val"><%= formatDate(docs.boardDate) %></td>
+      <td class="meta-val">Container Size: &nbsp; <%= docs.containerSizeAndType %></td>
+      <td colspan="4"></td>
+    </tr>
+  </table>
+
+  <!-- Main Packing Table -->
+<table id="mainTable" style="table-layout: fixed; width: 100%;">
+  <colgroup>
+    <!-- Carton Serial Number (3 cols) -->
+    <col style="width: 4%;">
+    <col style="width: 1%;">
+    <col style="width: 4%;">
+    <!-- Total Number of Cartons -->
+    <col style="width: 4%;">
+    <!-- Purchase Order No. -->
+    <col style="width: 6%;">
+    <!-- Article Number -->
+    <col style="width: 4%;">
+    <!-- Style Number -->
+    <col style="width: 6%;">
+    <!-- Color Name -->
+    <col style="width: 5%;">
+    <!-- Size Wise Breakup (9 cols) -->
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <col style="width: 2.5%;">
+    <!-- Quantity Per Cartons -->
+    <col style="width: 4%;">
+    <!-- Total Quantity -->
+    <col style="width: 4%;">
+    <!-- Carton Dimension -->
+    <col style="width: 6%;">
+    <!-- Total Net Weight -->
+    <col style="width: 6%;">
+    <!-- Total Gross Weight -->
+    <col style="width: 6%;">
+    <!-- CBM -->
+    <col style="width: 4%;">
+  </colgroup>
+  <thead>
+    <tr>
+      <th colspan="3" rowspan="2" style="font-size: 6px; padding: 2px;">Carton Serial<br />Number</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Total<br />Number of<br />Cartons</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Purchase Order No.</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">ARTICLE<br />NUMBER</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Style Number</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Color Name</th>
+      <th colspan="9" style="font-size: 6px; padding: 2px;">Size Wise Breakup</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Quantity<br />Per<br />Cartons</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Total<br />Quantity</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Carton<br />Dimension in<br />Cms</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Total Net Weight<br />in Kgs</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">Total Gross<br />Weight in<br />Kgs</th>
+      <th rowspan="2" style="font-size: 6px; padding: 2px;">CBM</th>
+    </tr>
+    <tr>
+      <th style="font-size: 6px; padding: 2px;">XS</th>
+      <th style="font-size: 6px; padding: 2px;">S</th>
+      <th style="font-size: 6px; padding: 2px;">M</th>
+      <th style="font-size: 6px; padding: 2px;">L</th>
+      <th style="font-size: 6px; padding: 2px;">XL</th>
+      <th style="font-size: 6px; padding: 2px;">XXL</th>
+      <th style="font-size: 6px; padding: 2px;">3XL</th>
+      <th style="font-size: 6px; padding: 2px;">4XL</th>
+      <th style="font-size: 6px; padding: 2px;">OS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% docs.listOfItems.forEach(function(item) { %>
+      <tr>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.cartonSerialStart %></td>
+        <td style="font-size: 6px; padding: 2px;">TO</td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.cartonSerialEnd %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.cartonNo %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.poNumber %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.articleNumber %></td>
+        <td class="left" style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.styleNumber %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.color %></td>
+        <!-- Size Wise Breakup -->
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeXs %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeS %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeM %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeL %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeXl %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeXxl %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeXxxl %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.sizeXxxxl %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.overSize %></td>
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.noOfPcs %></td>
+        <!-- Total Quantity -->
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.quantity %></td>
+        <!-- Carton Dimension -->
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.cartonDimension %></td>
+        <!-- Total Net Weight -->
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.netWeight.toFixed(2) %></td>
+        <!-- Total Gross Weight -->
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.grossWeight.toFixed(2) %></td>
+        <!-- CBM -->
+        <td style="font-size: 6px; padding: 2px; overflow-wrap: break-word;"><%= item.cbm.toFixed(2) %></td>
+      </tr>
+    <% }); %>
+  </tbody>
+  <tfoot>
+    <!-- Empty Spacer Row -->
+    <tr>
+      <td>&nbsp;</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <!-- Total Row (Blue) -->
+    <tr class="total-row">
+      <td></td>
+      <td></td>
+      <td><%= docs.noOfCartons %></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="bold">TOTAL</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td class="bold"><%= docs.totalQuantity %></td>
+      <td></td>
+      <td class="bold"><%= docs.totalNetWeight.toFixed(2) %></td>
+      <td class="bold"><%= docs.totalGrossWeight.toFixed(2) %></td>
+      <td class="bold"><%= docs.totalCBM.toFixed(2) %></td>
+    </tr>
+    <!-- Empty Spacer Row -->
+    <tr>
+      <td>&nbsp;</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <!-- Grand Total Row (Orange) -->
+    <tr class="grand-row">
+      <td></td>
+      <td></td>
+      <td><%= docs.noOfCartons %></td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td class="bold"><%= docs.totalQuantity %></td>
+      <td></td>
+      <td class="bold"><%= docs.totalNetWeight.toFixed(2) %></td>
+      <td class="bold"><%= docs.totalGrossWeight.toFixed(2) %></td>
+      <td class="bold"><%= docs.totalCBM.toFixed(2) %></td>
+    </tr>
+  </tfoot>
+</table>
+
+  <!-- Footer -->
+  <table id="footerTable">
+    <colgroup>
+      <col style="width: 73%">
+      <col style="width: 27%">
+    </colgroup>
+    <tr>
+      <td style=" vertical-align: top; border-top: none;">
+        <strong>Statement of Origin:</strong><br /><br />
+        The exporter INREX<%= docs.ieCodeNumber %>TC003 of the products covered by this document declares that, except where otherwise clearly indicated, these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of European Union - and that the origin criterion met is "W"-HSN.
+      </td>
+      <td style="vertical-align: top; border-top: none;">
+        For <%= docs.exporterName %><br /><br /><br /><br /><br>
+        Authorised Signatory
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

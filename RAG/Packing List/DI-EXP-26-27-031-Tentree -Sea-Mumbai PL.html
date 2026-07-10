@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Packing List</title>
+  <style>
+    @page { size: A4 landscape; margin: 6mm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11px;
+      color: #111;
+      margin: 24px;
+    }
+    .pl-title {
+      text-align: center;
+      font-weight: bold;
+      font-size: 16px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    td, th {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      text-align: center;
+      vertical-align: middle;
+      word-wrap: break-word;
+    }
+    th { font-weight: bold; }
+    .pl-header-table {
+      width: 100%;
+      border: none;
+    }
+    .pl-header-table td {
+      vertical-align: top;
+      padding: 4px 8px;
+      border-top: none;
+      border-bottom: none;
+    }
+    .pl-header-left { width: 32%; text-align: left; }
+    .pl-header-middle { width: 36%; text-align: left; }
+    .pl-header-right { width: 32%; text-align: right; }
+    .label { font-weight: bold; }
+    .pl-total-row td { font-weight: bold; }
+    .summary-table {
+      border: 1px solid #000;
+      width: 220px;
+      margin-top: 12px;
+      border-collapse: collapse;
+    }
+    .summary-table td {
+      padding: 2px 8px;
+      border: none;
+      text-align: left;
+    }
+    .box-size {
+      margin-top: 10px;
+      font-size: 11px;
+    }
+    .blank-row td {
+      height: 6px;
+      border-top: none;
+    }
+  </style>
+</head>
+
+<body>
+  <% function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  } %>
+
+  <% function addressLine() {
+    return Array.from(arguments)
+      .filter(v => v && String(v).trim() !== "")
+      .join(", ");
+  } %>
+
+  <% function formatCurrency(value, symbol) {
+    if (value === undefined || value === null || value === "") return "";
+    return `${symbol || ""}${Number(value).toFixed(2)}`;
+  } %>
+
+  <%
+    // ---- Build carton groups: every SKU sharing the same cartonNo becomes
+    // ---- one visual "box" with CTN#, PO#, N/W, G/W, MEASURE spanned (rowspan)
+    // ---- across all its SKU rows.
+    const rawItems = docs.listOfItems || [];
+    const groups = [];
+    rawItems.forEach(function(item) {
+      let g = groups.find(function(grp) { return grp.cartonNo === item.cartonNo; });
+      if (!g) {
+        g = { cartonNo: item.cartonNo, items: [] };
+        groups.push(g);
+      }
+      g.items.push(item);
+    });
+
+    // Sum/derive the per-carton totals from its member items (falls back to
+    // whichever item on the carton actually carries the weight/measure value).
+    groups.forEach(function(g) {
+      g.netWeight = g.items.reduce(function(sum, it) {
+        return sum + (Number(it.netWeight) || 0);
+      }, 0);
+      g.grossWeight = g.items.reduce(function(sum, it) {
+        return sum + (Number(it.grossWeight) || 0);
+      }, 0);
+      const dimItem = g.items.find(function(it) { return it.cartonDimension; });
+      g.cartonDimension = dimItem ? dimItem.cartonDimension : "";
+      const poItem = g.items.find(function(it) { return it.poNumber; });
+      g.poNumber = poItem ? poItem.poNumber : "";
+    });
+  %>
+
+  <!-- Title -->
+  <table>
+    <tr><td colspan="10" class="pl-title">PACKING LIST</td></tr>
+  </table>
+
+  <!-- Header Table -->
+  <table class="pl-header-table">
+    <tr>
+      <td class="pl-header-left" style="border-right:none;">
+        <strong>Exporter address:-</strong><br>
+        <%= docs.exporterName || "" %><br>
+        <%- addressLine(docs.exporterAddress, docs.exporterCity, docs.exporterState, docs.exporterPincode, docs.exporterCountry).replace(/, /g, '<br>') %>
+      </td>
+      <td class="pl-header-middle" style="border-left:none;border-right:none;">
+        <strong>Delivery / Ship To Address:-</strong><br>
+        <%= docs.buyerName || "" %><br>
+        <%- addressLine(docs.buyerAddress, docs.buyerCity, docs.buyerState, docs.buyerPincode, docs.buyerCountry).replace(/, /g, '<br>') %>
+      </td>
+      <td class="pl-header-left" style="border-left:none;">
+        <strong>Invoice No.</strong> <%= docs.invoiceNumber || "" %><br>
+        <strong>Invoice date</strong> <%= docs.invoiceDate ? formatDate(docs.invoiceDate) : "" %>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Main Items Table -->
+  <table class="pl-table">
+    <colgroup>
+      <col style="width: 4%;"> <!-- CTN # -->
+      <col style="width: 6%;"> <!-- PO # -->
+      <col style="width: 10%;"> <!-- SKU -->
+      <col style="width: 10%;"> <!-- UPC -->
+      <col style="width: 20%;"> <!-- Style Description -->
+      <col style="width: 16%;"> <!-- Color Description -->
+      <col style="width: 4%;"> <!-- PCS/CTN -->
+      <col style="width: 3%;"> <!-- N/W -->
+      <col style="width: 3%;"> <!-- G/W -->
+      <col style="width: 6%;"> <!-- MEASURE -->
+    </colgroup>
+    <thead>
+      <tr>
+        <th>CTN #</th>
+        <th>PO #</th>
+        <th>SKU</th>
+        <th>UPC</th>
+        <th>Style Description</th>
+        <th>Color Description</th>
+        <th>PCS/CTN</th>
+        <th>N/W</th>
+        <th>G/W</th>
+        <th>MEASURE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <%
+        let prevSignature = null;
+      %>
+      <% groups.forEach(function(group, gIndex) { %>
+        <%
+          const firstItem = group.items[0];
+          const signature = (firstItem.styleName || "") + "|" + (firstItem.color || "");
+          const rowCount = group.items.length;
+        %>
+        <% if (gIndex > 0 && signature !== prevSignature) { %>
+          <tr class="blank-row"><td colspan="10">&nbsp;</td></tr>
+        <% } %>
+        <% prevSignature = signature; %>
+
+        <% group.items.forEach(function(item, iIndex) { %>
+          <tr>
+            <% if (iIndex === 0) { %>
+              <td rowspan="<%= rowCount %>"><%= group.cartonNo || "" %></td>
+              <td rowspan="<%= rowCount %>"><%= group.poNumber || "" %></td>
+            <% } %>
+            <td><%= item.sku || "" %></td>
+            <td><%= item.upc || "" %></td>
+            <td><%= item.styleName || "" %></td>
+            <td><%= item.color || "" %></td>
+            <td><%= item.noOfPcs || "" %></td>
+            <% if (iIndex === 0) { %>
+              <td rowspan="<%= rowCount %>"><%= formatCurrency(group.netWeight, docs.currencySymbol) %></td>
+              <td rowspan="<%= rowCount %>"><%= formatCurrency(group.grossWeight, docs.currencySymbol) %></td>
+              <td rowspan="<%= rowCount %>"><%= group.cartonDimension || "" %></td>
+            <% } %>
+          </tr>
+        <% }); %>
+      <% }); %>
+
+      <tr class="pl-total-row">
+        <td>Total</td>
+        <td><%= groups.length || 0 %></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><%= docs.totalQuantity || 0 %></td>
+        <td><%= formatCurrency(docs.totalNetWeight, docs.currencySymbol) %></td>
+        <td><%= formatCurrency(docs.totalGrossWeight, docs.currencySymbol) %></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Summary Table -->
+  <table class="summary-table">
+    <tr><td><strong>No of Units</strong></td><td><%= docs.totalQuantity || 0 %></td></tr>
+    <tr><td><strong>No of cartons</strong></td><td><%= groups.length || 0 %></td></tr>
+    <tr><td><strong>CBM</strong></td><td><%= docs.totals && docs.totals.cbm ? docs.totals.cbm : "" %></td></tr>
+    <tr><td><strong>Gross Weight</strong></td><td><%= formatCurrency(docs.totalGrossWeight, docs.currencySymbol) %></td></tr>
+    <tr><td><strong>Net Weight</strong></td><td><%= formatCurrency(docs.totalNetWeight, docs.currencySymbol) %></td></tr>
+  </table>
+
+  <% if (docs.boxSizes && docs.boxSizes.length > 0) { %>
+    <div class="box-size">
+      <strong>BOX SIZE</strong> &nbsp;
+      <% docs.boxSizes.forEach(function(box, i) { %>
+        <%= box.size %> <%= box.count %><% if (i < docs.boxSizes.length - 1) { %>&nbsp;&nbsp;&nbsp;<% } %>
+      <% }); %>
+    </div>
+  <% } %>
+</body>
+</html>

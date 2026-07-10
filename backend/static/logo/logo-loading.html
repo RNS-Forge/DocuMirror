@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocuMirror — Page Loading Animation</title>
+<link rel="icon" type="image/svg+xml" href="logo-mark.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #ffffff; /* Changed to white */
+    --accent: #1f4fd8;
+    --accent-dark: #163aa3;
+    --muted: #9aa4b8;
+    --paper: #f6f7f9;
+    --surface: #ffffff;
+    --line: #dfe3e8;
+    --radius: 5px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    color: var(--ink);
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .curtain, .curtain-l, .curtain-r, .dm-mark *, .wordmark span, .tagline { animation: none !important; }
+    .curtain { display: none !important; }
+  }
+
+  /* ============================================================
+     Underlying page — what the splash reveals once it clears.
+     Stand-in for the real app shell.
+     ============================================================ */
+  .page-shell {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 20px;
+  }
+  .page-shell .mini-logo { width: 34px; height: 34px; margin-bottom: 6px; }
+  .page-shell h1 { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .page-shell p { font-family: var(--font-mono); font-size: 12px; color: #6b7280; max-width: 360px; }
+  .replay-btn {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 9px 18px;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .replay-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ============================================================
+     Splash — two white curtain panels shaped like the logo's own
+     left/right halves. They hold the mark centered while it draws
+     in, then part like the mark's own seam, opening onto the app.
+     ============================================================ */
+  .splash {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+  }
+  .curtain-l, .curtain-r {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    background: var(--ink); /* Now white */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .curtain-l { justify-content: flex-end; animation: split-left 0.7s cubic-bezier(.76,0,.24,1) 2.35s forwards; }
+  .curtain-r { justify-content: flex-start; animation: split-right 0.7s cubic-bezier(.76,0,.24,1) 2.35s forwards; }
+
+  @keyframes split-left  { to { transform: translateX(-100%); } }
+  @keyframes split-right { to { transform: translateX(100%); } }
+
+  .splash-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    z-index: 2;
+  }
+
+  /* ---- Mark construction: two halves fly in from opposite edges ---- */
+  .dm-mark { width: 72px; height: 72px; position: relative; }
+  .dm-mark svg { width: 100%; height: 100%; overflow: visible; }
+
+  .half-ink {
+    animation: enter-left 0.7s cubic-bezier(.16,1,.3,1) 0.15s both;
+  }
+  .half-accent {
+    animation: enter-right 0.7s cubic-bezier(.16,1,.3,1) 0.15s both;
+  }
+  @keyframes enter-left  { from { transform: translateX(-46px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes enter-right { from { transform: translateX(46px);  opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .seam {
+    animation: seam-grow 0.35s ease-out 0.75s both;
+    transform-origin: center;
+  }
+  @keyframes seam-grow { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 0.9; } }
+
+  .flap {
+    transform-origin: 26px 3px;
+    animation: flap-settle 0.5s cubic-bezier(.34,1.56,.64,1) 0.95s both;
+  }
+  @keyframes flap-settle {
+    from { transform: rotate(-40deg); opacity: 0; }
+    to   { transform: rotate(0deg);   opacity: 1; }
+  }
+
+  /* seam glint sweep, once mark is fully assembled */
+  .glint-clip { animation: none; }
+  .glint {
+    animation: glint-sweep 0.9s ease-in-out 1.15s 1;
+    opacity: 0;
+  }
+  @keyframes glint-sweep {
+    0%   { transform: translateY(-40px); opacity: 0; }
+    15%  { opacity: 0.9; }
+    85%  { opacity: 0.9; }
+    100% { transform: translateY(40px); opacity: 0; }
+  }
+
+  /* ---- Wordmark: letters rise in staggered after the mark settles ---- */
+  .wordmark {
+    display: flex;
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #12151c; /* Changed to black for contrast on white */
+  }
+  .wordmark span {
+    display: inline-block;
+    animation: letter-up 0.5s cubic-bezier(.16,1,.3,1) both;
+  }
+
+  .tagline {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    animation: fade-up 0.5s ease 1.75s both;
+  }
+  @keyframes letter-up { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fade-up   { from { transform: translateY(6px);  opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- ============ Splash ============ -->
+<div class="splash" id="splash">
+  <div class="curtain-l" id="curtainL"></div>
+  <div class="curtain-r" id="curtainR"></div>
+
+  <div class="splash-center">
+    <div class="dm-mark">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="glintClip"><path d="M6,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z"/></clipPath>
+          <linearGradient id="glintGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="50%" stop-color="#ffffff" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+
+        <g class="half-ink">
+          <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
+        </g>
+
+        <g class="half-accent">
+          <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
+          <g class="flap"><path d="M26,0 L32,6 H26 Z" fill="#163aa3"/></g>
+        </g>
+
+        <rect class="seam" x="15.25" y="4" width="1.5" height="24" rx="0.75" fill="#12151c" opacity="0.9"/>
+        <g clip-path="url(#glintClip)">
+          <rect class="glint" x="0" y="0" width="32" height="12" fill="url(#glintGrad)"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="wordmark" aria-label="DocuMirror">
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ Page Shell ============ -->
+<div class="page-shell" id="pageShell">
+  <svg class="mini-logo" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
+    <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
+    <path d="M26,0 L32,6 H26 Z" fill="#163aa3"/>
+  </svg>
+</div>
+
+<script>
+  const splash = document.getElementById('splash');
+  const curtainR = document.getElementById('curtainR');
+  const replayBtn = document.getElementById('replayBtn');
+
+  function restartAnimation() {
+    splash.style.display = 'flex';
+    const fresh = splash.cloneNode(true);
+    splash.parentNode.replaceChild(fresh, splash);
+    setTimeout(() => {
+      window.location.reload();
+    }, 10);
+  }
+
+  function onSplashDone() {
+    setTimeout(restartAnimation, 1000); // Restart after 1 second
+  }
+
+ 
+
+</script>
+</body>
+</html>

@@ -29,17 +29,27 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import BACKEND_PORT, TEMP_UPLOAD_DIR, OUTPUT_DIR
-from app.orchestrator import run_pipeline
+from app.agent_orchestrator import run_pipeline
 from app.render_client import check_render_service
 from app.schemas import ExtractionResponse, IterationResult
+from app.chatbot_agent import process_chat
+
+from pydantic import BaseModel
 
 logger = logging.getLogger("documirror.main")
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    reply: str
+
 
 _STATIC_DIR = Path(__file__).parent.parent / "static"
 
@@ -65,6 +75,18 @@ app.add_middleware(
 async def root() -> FileResponse:
     """Redirect root to the upload UI."""
     return FileResponse(str(_STATIC_DIR / "index.html"))
+
+
+@app.get("/upload", include_in_schema=False)
+async def upload_page() -> FileResponse:
+    """Serve the upload and extraction page."""
+    return FileResponse(str(_STATIC_DIR / "upload.html"))
+
+
+@app.get("/editor", include_in_schema=False)
+async def editor_page() -> FileResponse:
+    """Serve the code editor page."""
+    return FileResponse(str(_STATIC_DIR / "codeeditor.html"))
 
 
 # ---------------------------------------------------------------------------
@@ -114,10 +136,11 @@ async def extract(
     """
     # --- Validate file type ---
     filename = upload_filename = file.filename or "upload.pdf"
-    if not filename.lower().endswith(".pdf"):
+    valid_exts = (".pdf", ".png", ".jpg", ".jpeg", ".webp")
+    if not filename.lower().endswith(valid_exts):
         raise HTTPException(
             status_code=400,
-            detail="Only PDF files are accepted. Received: " + filename,
+            detail=f"Only PDF and Image files are accepted. Received: {filename}",
         )
 
     job_id = str(uuid.uuid4())
@@ -227,6 +250,21 @@ async def preview(job_id: str) -> FileResponse:
     response.background = BackgroundTask(cleanup)
     return response
 
+
+# ---------------------------------------------------------------------------
+# POST /chat
+# ---------------------------------------------------------------------------
+@app.post("/chat", response_model=ChatResponse, summary="Chat with the Dibella AI Assistant")
+async def chat_endpoint(
+    message: str = Form(...),
+    image: Optional[UploadFile] = File(None)
+) -> JSONResponse:
+    """
+    Chatbot endpoint. Queries the RAG store and returns an answer.
+    Currently routed to DocuMirror Chatbot Agent.
+    """
+    reply = process_chat(message)
+    return JSONResponse(content={"reply": reply})
 
 # ---------------------------------------------------------------------------
 # GET /health

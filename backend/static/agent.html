@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuMirror AI Agent - Live Pipeline</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/agent.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- Left Panel: Controls -->
+        <aside class="panel left-panel">
+            <div class="panel-header">
+                <h2>Upload Document</h2>
+                <p>Initialize the multi-agent pipeline</p>
+            </div>
+            
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📄</div>
+                <p>Drag & drop image/PDF here or click to browse</p>
+                <input type="file" id="file-input" hidden accept=".pdf,.png,.jpg,.jpeg">
+            </div>
+            
+            <div class="control-group">
+                <label for="doc-type">Document Type Override</label>
+                <select id="doc-type">
+                    <option value="auto">Auto (Classifier Agent)</option>
+                    <option value="ci">Force Commercial Invoice</option>
+                    <option value="pl">Force Packing List</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" id="start-btn" disabled>Start Processing</button>
+            
+            <div class="accuracy-warning">
+                <strong>Accuracy Mode:</strong> Verification will keep iterating until output matches source. This may take longer than a single-pass generation.
+            </div>
+        </aside>
+
+        <!-- Center Panel: Pipeline & Logs -->
+        <main class="panel center-panel">
+            <div class="panel-header">
+                <h2>Live Agent Pipeline</h2>
+                <p>Real-time orchestrator visualization</p>
+            </div>
+
+            <div class="pipeline-tracker">
+                <div class="node" id="node-classifier">
+                    <div class="node-circle">1</div>
+                    <div class="node-label">Classifier</div>
+                </div>
+                <div class="connector" id="conn-1"></div>
+                <div class="node" id="node-generator">
+                    <div class="node-circle">2</div>
+                    <div class="node-label">CI/PL Agent (RAG)</div>
+                </div>
+                <div class="connector" id="conn-2"></div>
+                <div class="node" id="node-verifier">
+                    <div class="node-circle">3</div>
+                    <div class="node-label">Verifier</div>
+                    <div class="node-sublabel" id="verifier-counter">Iteration 0/0</div>
+                </div>
+                <div class="connector" id="conn-3"></div>
+                <div class="node" id="node-json">
+                    <div class="node-circle">4</div>
+                    <div class="node-label">JSON Agent</div>
+                </div>
+                <div class="connector" id="conn-4"></div>
+                <div class="node" id="node-output">
+                    <div class="node-circle">5</div>
+                    <div class="node-label">Final Output</div>
+                </div>
+            </div>
+
+            <div class="logs-container">
+                <h3>System Logs</h3>
+                <div class="log-stream" id="log-stream">
+                    <!-- Logs will appear here -->
+                    <div class="log-entry system">System ready. Awaiting document upload...</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel: Output & Chatbot -->
+        <aside class="panel right-panel">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="preview">Preview</button>
+                <button class="tab-btn" data-tab="html">HTML</button>
+                <button class="tab-btn" data-tab="json">JSON</button>
+                <button class="tab-btn" data-tab="chat">Chatbot</button>
+            </div>
+            
+            <div class="tab-content active" id="tab-preview">
+                <div class="empty-state">No output generated yet.</div>
+                <iframe id="preview-frame" style="display: none;"></iframe>
+            </div>
+            
+            <div class="tab-content" id="tab-html">
+                <div class="empty-state">No output generated yet.</div>
+                <pre><code id="html-code"></code></pre>
+            </div>
+            
+            <div class="tab-content" id="tab-json">
+                <div class="empty-state">No output generated yet.</div>
+                <pre><code id="json-code"></code></pre>
+            </div>
+
+            <div class="tab-content chatbot" id="tab-chat">
+                <div class="chat-history" id="chat-history">
+                    <div class="chat-message agent">
+                        Hello! I am the DocuMirror AI Assistant. Ask me about your documents, HTML formatting, or our RAG mappings.
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Ask a question or request a change...">
+                    <button id="send-chat-btn">Send</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <script src="js/pipeline.js"></script>
+</body>
+</html>

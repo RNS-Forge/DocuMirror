@@ -1,0 +1,337 @@
+<%
+const n2 = v => (v === null || v === undefined || v === '') ? '' : Number(v).toFixed(2);
+const n3 = v => (v === null || v === undefined || v === '') ? '' : Number(v).toFixed(3);
+
+function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+}
+
+function addressLine() {
+    return Array.from(arguments)
+        .filter(v => v && String(v).trim() !== "")
+        .join(", ");
+}
+
+// Group items by color
+const groupedItems = {};
+(docs.listOfItems || []).forEach(item => {
+    const color = item.color || "N/A";
+    if (!groupedItems[color]) {
+        groupedItems[color] = {
+            items: [],
+            totalCartons: 0,
+            totalPcs: 0,
+            totalNetWeight: 0,
+            totalGrossWeight: 0,
+            totalCbm: 0,
+            xs: 0,
+            s: 0,
+            m: 0,
+            l: 0,
+            xl: 0,
+            xxl: 0
+        };
+    }
+    groupedItems[color].items.push(item);
+    groupedItems[color].totalCartons += Number(item.cartonNo || 0);
+    groupedItems[color].totalPcs += Number(item.totalPcs || item.quantity || 0);
+    groupedItems[color].totalNetWeight += Number(item.netWeight || 0);
+    groupedItems[color].totalGrossWeight += Number(item.grossWeight || 0);
+    groupedItems[color].totalCbm += Number(item.cbm || 0);
+    groupedItems[color].xs += Number(item.sizeXs || 0);
+    groupedItems[color].s += Number(item.sizeS || 0);
+    groupedItems[color].m += Number(item.sizeM || 0);
+    groupedItems[color].l += Number(item.sizeL || 0);
+    groupedItems[color].xl += Number(item.sizeXl || 0);
+    groupedItems[color].xxl += Number(item.sizeXxl || 0);
+    
+});
+%>
+<%
+let grandCartons = 0;
+
+Object.values(groupedItems).forEach(group => {
+    grandCartons += group.totalCartons;
+});
+%>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Packing List - <%= docs.listOfItems?.[0]?.poNumber || '' %></title>
+<style>
+  @page { size: A4 landscape; margin: 6mm; }
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+  body{
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 7.5px;
+    color: #000;
+    padding: 6px;
+  }
+
+  .pl-title{
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    padding: 5px 0 5px;
+    border: 1px solid #000;
+    border-bottom: none;
+  }
+
+  table{ width: 100%; border-collapse: collapse; table-layout: fixed; }
+  td, th{
+    border: 1px solid #000;
+    padding: 2px 3px;
+    vertical-align: middle;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  #mainTable thead th{
+    font-weight: bold;
+    font-size: 7px;
+    line-height: 1.2;
+    padding: 3px 2px;
+    vertical-align: middle;
+  }
+
+  .shade-cell{
+    font-weight: bold;
+    writing-mode: horizontal-tb;
+  }
+
+  .subtotal-row td{
+    font-weight: bold;
+    background: #f0f0f0;
+  }
+
+  .grand-total-row td{
+    font-weight: bold;
+  }
+
+  .left{ text-align: left; }
+  .right{ text-align: right; }
+  .bold{ font-weight: bold; }
+
+  #summaryBox{
+    margin-top: 8px;
+    width: 220px;
+  }
+  #summaryBox td{
+    font-size: 8px;
+    padding: 2px 5px;
+    border: 1px solid #000;
+  }
+  #summaryBox .lbl{ text-align: left; font-weight: bold; width: 130px; }
+  #summaryBox .val{ text-align: right; width: 50px; }
+  #summaryBox .unt{ text-align: left; width: 40px; }
+</style>
+</head>
+<body>
+
+<table>
+  <tr>
+    <td class="pl-title" colspan="25">PACKING LIST</td>
+  </tr>
+</table>
+
+<!-- MAIN PACKING TABLE -->
+<table id="mainTable">
+  <colgroup>
+    <col style="width:2.5%">
+    <col style="width:2.5%">
+    <col style="width:2.5%">
+    <col style="width:3.5%">
+    <col style="width:7.0%">
+    <col style="width:4.0%">
+    <col style="width:15.0%">
+    <col style="width:5.0%">
+    <col style="width:8.0%">
+    <col style="width:4.0%">
+    <col style="width:2.0%">
+    <col style="width:2.0%">
+    <col style="width:2.0%">
+    <col style="width:2.0%">
+    <col style="width:2.0%">
+    <col style="width:2.0%">
+    <col style="width:3.0%">
+    <col style="width:3.0%">
+    <col style="width:4.0%">
+    <col style="width:4.0%">
+    <col style="width:4.0%">
+    <col style="width:4.0%">
+    <col style="width:6.0%">
+    <col style="width:3.0%">
+    <col style="width:3.0%">
+  </colgroup>
+  <thead>
+    <tr>
+      <th>CTN<br/>NO<br/>FROM</th>
+      <th>CTN<br/>NO TO</th>
+      <th>Total No<br/>of Ctns</th>
+      <th>Season</th>
+      <th>PO Number</th>
+      <th>Style<br/>Number</th>
+      <th>Style Name</th>
+      <th>SKU Number</th>
+      <th>Colour</th>
+      <th>UPC Number</th>
+      <th>XS</th>
+      <th>S</th>
+      <th>M</th>
+      <th>L</th>
+      <th>XL</th>
+      <th>XXL</th>
+      <th>No of<br/>Pcs /<br/>Ctns</th>
+      <th>Total<br/>Pcs</th>
+      <th>Total Net<br/>Weight in<br/>Kgs</th>
+      <th>Total<br/>Gross<br/>Weight<br/>in Kgs</th>
+      <th>Carton<br/>Net<br/>Weight<br/>in Kgs</th>
+      <th>Carton<br/>Gross<br/>Weight in<br/>Kgs</th>
+      <th>Carton<br/>Dimension in<br/>Cms</th>
+      <th>CBM</th>
+      <th>SHADE</th>
+    </tr>
+  </thead>
+  <tbody id="mainTbody">
+  <% Object.keys(groupedItems).forEach(function(color) { %>
+    <% const group = groupedItems[color]; %>
+
+    <% group.items.forEach(function(item, index) { %>
+      <tr>
+        <td><%= item.cartonSerialStart || '' %></td>
+        <td><%= item.cartonSerialEnd || '' %></td>
+        <td><%= item.cartonNo || '' %></td>
+        <td><%= item.season || '' %></td>
+        <td><%= item.poNumber || '' %></td>
+        <td><%= item.styleNumber || '' %></td>
+        <td class="left"><%= item.styleName || '' %></td>
+        <td><%= item.skuNumber || '' %></td>
+        <td><%= color %></td>
+        <td><%= item.upcNumber || '' %></td>
+        <td><%= item.sizeXs || '' %></td>
+        <td><%= item.sizeS || '' %></td>
+        <td><%= item.sizeM || '' %></td>
+        <td><%= item.sizeL || '' %></td>
+        <td><%= item.sizeXl || '' %></td>
+        <td><%= item.sizeXxl || '' %></td>
+        <td><%= item.noOfPcs || '' %></td>
+        <td><%= item.totalPcs || '' %></td>
+        <td><%= n2(item.netWeight) %></td>
+        <td><%= n2(item.grossWeight) %></td>
+        <td><%= n2(item.netWeightCtn) %></td>
+        <td><%= n2(item.grossWeightCtn) %></td>
+        <td><%= item.cartonDimension || '' %></td>
+        <td><%= n3(item.cbm) %></td>
+        <td class="shade-cell bold"><%= item.shade || '' %></td>
+      </tr>
+    <% }); %>
+
+    <!-- Subtotal Row for the Color Group -->
+    <tr class="subtotal-row">
+      <td></td><td></td><td><%= group.totalCartons %></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+      <td><%= group.xs %></td>
+      <td><%= group.s %></td>
+      <td><%= group.m %></td>
+      <td><%= group.l %></td>
+      <td><%= group.xl %></td>
+      <td><%= group.xxl %></td>
+      <td></td>
+      <td><%= group.totalPcs %></td>
+      <td><%= n2(group.totalNetWeight) %></td>
+      <td><%= n2(group.totalGrossWeight) %></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><%= n3(group.totalCbm) %></td>
+      <td></td>
+    </tr>
+  <% }); %>
+</tbody>
+  <tfoot id="mainTfoot">
+    <!-- Spacer Row -->
+    <tr>
+      <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+    </tr>
+
+    <!-- Grand Total Row -->
+    <tr class="grand-total-row">
+      <td></td>
+      <td></td>
+      <td><%= grandCartons %></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>
+      </td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><%= docs.totalQuantity %></td>
+      <td><%= n2(docs.totalNetWeight) %></td>
+      <td><%= n2(docs.totalGrossWeight) %></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td><%= n3(docs.totalCbm) %></td>
+      <td></td>
+    </tr>
+  </tfoot>
+</table>
+<br>
+<!-- SUMMARY BOX -->
+<table id="summaryBox">
+  <tbody id="summaryBoxBody">
+    <tr>
+      <td class="lbl">Total Quantity:</td>
+      <td class="val"><%= docs.totalQuantity %></td>
+      <td class="unt">Pcs</td>
+    </tr>
+    <tr>
+      <td class="lbl">Total Gross Weight:</td>
+      <td class="val"><%= docs.totalGrossWeight %></td>
+      <td class="unt">Kgs</td>
+    </tr>
+    <tr>
+      <td class="lbl">Total Net Weight:</td>
+      <td class="val"><%= docs.totalNetWeight %></td>
+      <td class="unt">Kgs</td>
+    </tr>
+    <tr>
+      <td class="lbl">Total Number of Packages:</td>
+      <td class="val"><%= docs.totalCartons %></td>
+      <td class="unt">Ctns</td>
+    </tr>
+    <tr>
+      <td class="lbl">Total CBM:</td>
+      <td class="val"><%= docs.totalCbm %></td>
+      <td class="unt">CBM</td>
+    </tr>
+    <tr>
+      <td class="lbl">Carton Dimension:</td>
+      <td class="val"><%= docs.cartonDimension %></td>
+      <td class="unt">cms</td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+
+</body>
+</html>

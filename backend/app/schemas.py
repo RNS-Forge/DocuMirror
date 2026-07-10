@@ -168,12 +168,12 @@ class CommercialInvoice(BaseModel):
     insurance_charges: Optional[str] = None
 
     # Other
-    bank_details: Optional[BankDetails] = None
+    bank_details: BankDetails = Field(default_factory=BankDetails)
     signatory: Optional[str] = Field(None, description="Authorized signatory name/designation")
     declaration: Optional[str] = Field(None, description="Declaration / certification text at bottom")
 
     # Layout metadata (populated by vision LLM)
-    layout: Optional[LayoutMeta] = None
+    layout: LayoutMeta = Field(default_factory=LayoutMeta)
 
     @model_validator(mode="before")
     @classmethod
@@ -259,7 +259,7 @@ class PackingList(BaseModel):
     declaration: Optional[str] = None
 
     # Layout metadata
-    layout: Optional[LayoutMeta] = None
+    layout: LayoutMeta = Field(default_factory=LayoutMeta)
 
     @model_validator(mode="before")
     @classmethod
@@ -334,14 +334,14 @@ class Invoice(BaseModel):
     # Payment
     payment_terms: Optional[str] = None
     payment_method: Optional[str] = None
-    bank_details: Optional[BankDetails] = None
+    bank_details: BankDetails = Field(default_factory=BankDetails)
 
     # Other
     notes: Optional[str] = None
     signatory: Optional[str] = None
 
     # Layout metadata
-    layout: Optional[LayoutMeta] = None
+    layout: LayoutMeta = Field(default_factory=LayoutMeta)
 
     @model_validator(mode="before")
     @classmethod

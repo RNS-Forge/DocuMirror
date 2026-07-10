@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DocuMirror logo mark">
+  <!-- Left half: solid ink block, representing the raw source document -->
+  <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
+
+  <!-- Right half: accent-blue page with a folded corner, representing the verified, reconstructed document -->
+  <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
+
+  <!-- Folded corner flap -->
+  <path d="M26,0 L32,6 H26 Z" fill="#163aa3"/>
+
+  <!-- Center seam -->
+  <rect x="15.25" y="4" width="1.5" height="24" rx="0.75" fill="#f6f7f9" opacity="0.9"/>
+</svg>

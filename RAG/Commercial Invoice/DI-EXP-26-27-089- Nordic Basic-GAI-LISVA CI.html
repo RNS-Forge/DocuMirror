@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Commercial Invoice</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 0;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .no-border {
+            border: none;
+        }
+
+        .no-border-bottom {
+            border-bottom: none;
+        }
+
+        .no-border-top {
+            border-top: none;
+        }
+
+        .no-border-right {
+            border-right: none;
+        }
+
+        .no-border-left {
+            border-left: none;
+        }
+    </style>
+</head>
+
+<body>
+    <%
+        function formatDate(dateInput) {
+            if (!dateInput) return '';
+            const date = new Date(dateInput);
+            if (isNaN(date)) return '';
+            return `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getFullYear()}`;
+        }
+    %>
+    <table>
+        <colgroup>
+            <col style="width:4%">  <!-- col 1 (Shipping Marks) -->
+            <col style="width:4%">  <!-- col 2 (Shipping Marks) -->
+            <col style="width:4%">  <!-- col 3 (Blank) -->
+            <col style="width:3%">  <!-- col 4 (Blank) -->
+            <col style="width:8%">  <!-- col 5 (PO#) -->
+            <col style="width:8%">  <!-- col 6 (Article No) -->
+            <col style="width:3%">  <!-- col 7 (Description) -->
+            <col style="width:2%">  <!-- col 8 (Description) -->
+            <col style="width:5%">  <!-- col 9 (Description) -->
+            <col style="width:5%">  <!-- col 10 (Description) -->
+            <col style="width:5%">  <!-- col 11 (Description) -->
+            <col style="width:5%">  <!-- col 12 (Description) -->
+            <col style="width:5%">  <!-- col 13 (Description) -->
+            <col style="width:3%">  <!-- col 14 (Description) -->
+            <col style="width:4%">  <!-- col 15 (Color) -->
+            <col style="width:4%">  <!-- col 16 (Color) -->
+            <col style="width:4%">  <!-- col 17 (HSN) -->
+            <col style="width:4%">  <!-- col 18 (HSN) -->
+            <col style="width:3%">  <!-- col 19 (Quantity) -->
+            <col style="width:3%">  <!-- col 20 (Quantity) -->
+            <col style="width:3%">  <!-- col 21 (Price) -->
+            <col style="width:3%">  <!-- col 22 (Price) -->
+            <col style="width:4%">  <!-- col 23 (Amount) -->
+            <col style="width:4%">  <!-- col 24 (Amount) -->
+        </colgroup>
+
+        <!-- TITLE -->
+        <tr>
+            <td colspan="24" class="title">COMMERCIAL INVOICE</td>
+        </tr>
+
+        <!-- ROW: Shipper/Exporter | Invoice No & Date | Bank Details -->
+        <tr>
+            <td colspan="8">
+                <b>Exporter:-</b><br>
+                <%= docs.exporterName %><br>
+                <%= docs.exporterAddress %><br>
+                <%= docs.exporterCity %><%= (docs.exporterCity && docs.exporterState) ? ', ' : '' %><%= docs.exporterState %><%= (docs.exporterState && docs.exporterPincode) ? ' - ' : '' %><%= docs.exporterPincode %><br>
+                <%= docs.exporterCountry %>
+            </td>
+            <td colspan="6" class="no-border-right">
+                <b>Invoice No.</b><br>
+                <%= docs.invoiceNumber %>
+            </td>
+            <td colspan="2" class="no-border-left left">
+                <b>Date</b><br>
+                <%= formatDate(docs.invoiceDate) %>
+            </td>
+            <td colspan="8">
+                <b>Bank Details:-</b><br>
+                Account Name: <%= docs.accountHolderName %><br>
+                BANK : <%= docs.bankName %><br>
+                ACCOUNT NO : <%= docs.accountNumber %><br>
+                BRANCH: <%= docs.branchName %><br>
+                SWIFT : <%= docs.swiftCode %>
+            </td>
+        </tr>
+
+        <!-- ROW: Buyer Address | Consignee/Importer | Exporter Ref -->
+        <tr>
+            <td colspan="8">
+                <b>Buyer Address:-</b><br>
+                <%= docs.buyerName %><br>
+                <%= docs.buyerAddress %><br>
+                <%= docs.buyerCity %><%= (docs.buyerCity && docs.buyerState) ? ', ' : '' %><%= docs.buyerState %><%= (docs.buyerState && docs.buyerPincode) ? ' - ' : '' %><%= docs.buyerPincode %><br>
+                <%= docs.buyerCountry %>
+            </td>
+            <td colspan="8">
+                <b>Consignee:-</b><br>
+                <%= docs.importerName %><br>
+                <%= docs.importerAddress %><br>
+                <%= docs.importerCity %><%= (docs.importerCity && docs.importerState) ? ', ' : '' %><%= docs.importerState %><%= (docs.importerState && docs.importerPincode) ? ' - ' : '' %><%= docs.importerPincode %><br>
+                <%= docs.importerCountry %>
+            </td>
+            <td colspan="8">
+                <b>Exporter Ref:-</b><br>
+                IEC NO : <%= docs.iecNo %><br>
+                AD Code: <%= docs.adCode %><br>
+                GST:<%= docs.gstin %>
+            </td>
+        </tr>
+
+        <!-- ROW: Pre-Carriage | Place of Receipt | Country of Origin | Country of Final Destination -->
+        <tr>
+            <td colspan="4"><b>Pre-Carriage By</b><br><%= docs.preCarriageBy %></td>
+            <td colspan="4"><b>Place of Reciept by Pre Carrier</b><br><%= docs.placeOfReceipt %></td>
+            <td colspan="8"><b>Country of Origin</b><br><%= docs.originCountry %></td>
+            <td colspan="8"><b>Country of Final Destination</b><br><%= docs.destinationCountry %></td>
+        </tr>
+
+        <!-- ROW: Vessel/Flight | Port of Loading | Payment Terms | Incoterms -->
+        <tr>
+            <td colspan="4"><b>Vessel/Flight No</b><br><%= docs.vehicleRegistrationNumber %></td>
+            <td colspan="4"><b>Port of Loading</b><br><%= docs.portOfLoading %></td>
+            <td colspan="8" class="no-border-right"><b>Payment Terms</b><br><%= docs.paymentTerms %>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LC NO-<%= docs.lcNumber %> DT.<%= formatDate(docs.lcDate) %></td>
+            <td colspan="8"><b>Incoterms</b><br><span class="bold"><%= docs.inCoTerms %></span></td>
+        </tr>
+
+        <!-- ROW: Port of Discharge | Final Destination | LUT -->
+        <tr>
+            <td colspan="4"><b>Port of Discharge</b><br><%= docs.portOfDischarge %></td>
+            <td colspan="4"><b>Final Destination</b><br><%= docs.finalDestination %></td>
+            <td colspan="16">LUT NO( ARN ) <%= docs.lutNo %> DT <%= formatDate(docs.lutDate) %></td>
+        </tr>
+
+        <!-- ITEMS HEADER -->
+        <tr>
+            <th colspan="2" style="text-align: center;">Shipping Marks &amp; Numbers</th>
+            <th colspan="2" style="text-align: center;"></th>
+            <th colspan="1" style="text-align: center;">Infolog New PO#</th>
+            <th colspan="1" style="text-align: center;">Atricle No.</th>
+            <th colspan="8" style="text-align: center;">Description of Goods</th>
+            <th colspan="2" style="text-align: center;">Color <br> Name</th>
+            <th colspan="2" style="text-align: center;">HSN <br> Code</th>
+            <th colspan="2" style="text-align: center;">Quantity in PCS</th>
+            <th colspan="2" style="text-align: center;">Unit Price in <%= docs.currency %></th>
+            <th colspan="2" style="text-align: center;">Amount in <%= docs.currency %></th>
+        </tr>
+
+        <!-- blank spacing row -->
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+
+        <!-- ITEMS ROWS -->
+        <% docs.listOfItems.forEach(function(item) { %>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"><%= item.newpurchaseOrderNumber %></td>
+            <td class="no-border-bottom no-border-top"><%= item.articleNumber %></td>
+            <td class="no-border-bottom no-border-top" colspan="8" style="text-align: left;"><%= item.descriptionOfGoods %></td>
+            <td class="no-border-bottom no-border-top" colspan="2"><%= item.colorName %></td>
+            <td class="no-border-bottom no-border-top" colspan="2"><%= item.hsnCode %></td>
+            <td class="no-border-bottom no-border-top" colspan="2"><%= item.quantity %></td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; <%= item.unitPrice %></td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; <%= item.amount %></td>
+        </tr>
+        <% }); %>
+
+        <!-- blank spacing rows -->
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+
+        <!-- IGCR / BOND / BOE ROW -->
+        <tr>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td colspan="14" class="no-border-bottom no-border-top" style="text-align: left; word-break: break-word; overflow-wrap: anywhere;">IGCR#&nbsp;<%= docs.igcr %>, BOND&nbsp;#&nbsp;<%= docs.bond %> BOE#&nbsp;<%= (docs.boe || '').replace(/[\r\n]+/g, ' ').trim() %> - <%= (docs.items || '').replace(/[\r\n]+/g, ' ').trim() %></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+
+        <!-- blank spacing rows after IGCR -->
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+
+        <!-- TOTALS ROW -->
+        <tr class="center">
+            <td colspan="2"></td>
+            <td colspan="2"></td>
+            <td></td>
+            <td></td>
+            <td colspan="8"></td>
+            <td colspan="2"></td>
+            <td class="right" colspan="2">Total:-</td>
+            <td colspan="2"><%= docs.totalQuantity %></td>
+            <td class="right" colspan="2">Total:-</td>
+            <td colspan="2">&dollar; <%= docs.totalAmount %></td>
+        </tr>
+
+        <!-- AMOUNT IN WORDS ROW -->
+        <tr>
+            <td colspan="18">
+                Amount in Words <%= docs.currency %>:<span style="margin-left: 20px;"><%= docs.amountInWords %></span>
+            </td>
+            <td colspan="6" rowspan="6">For <%= docs.exporterName %>
+                <div style="height:100px"></div>
+                Authorised Signatory
+            </td>
+        </tr>
+
+        <!-- STATEMENT OF ORIGIN / PACKING DETAILS -->
+        <tr>
+            <td colspan="11" rowspan="5">Statement of Origin:The exporter INREX0713012480TC003 of the products covered by this document declares that, except whereotherwise clearly 
+indicated these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of European Union - and
+that the origin criterion met is &nbsp; "P"<br><br>
+                Declaration :<br>
+                We declare that this Invoice shows the actual price of the goods described and that all particulars are
+                true and correct.
+            </td>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">Number of Packages</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center"><%= docs.totalNumberOfPackages %></td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom">CTNS</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">Total Net Weight:</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center"><%= docs.totalNetWeight %></td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom ">KGS</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">Total Gross Weight:</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center"><%= docs.totalGrossWeight %></td>
+            <td colspan="2" class="no-border-top no-border-bottom no-border-left">KGS</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">CBM:</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center"><%= docs.totalCbm %></td>
+            <td colspan="2" class="no-border-top no-border-bottom no-border-left">CBM</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right">Pcs</td>
+            <td colspan="2" class="no-border-top no-border-left no-border-right center"><%= docs.totalQuantity %></td>
+            <td colspan="2" class="no-border-top no-border-left">PCS</td>
+        </tr>
+    </table>
+</body>
+
+</html>

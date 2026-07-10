@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Packing List - <%= docs.buyerInvoiceNumber || "" %></title>
+    <style>
+        *
+        {
+            box-sizing: border-box;
+        }
+        body
+        {
+            font-family: Arial, sans-serif;
+            font-size: 8px; /* Standard font size for all text */
+            margin: 0;
+            padding: 10px;
+            color: #000;
+        }
+        @page
+        {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+        .packing-list-container
+        {
+            width: 100%;
+        }
+        .main-title
+        {
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px; /* Slightly larger for the title */
+            padding: 4px 0;
+            background-color: #f2f2f2;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            border-top: 1px solid #000;
+        }
+        table
+        {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        table + table
+        {
+            margin-top: -1px;
+        }
+        td, th
+        {
+            border: 1px solid #000;
+            padding: 4px;
+            vertical-align: top;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow: hidden;
+            font-size: 9px; /* Ensure table text is consistent */
+        }
+        thead th
+        {
+            background-color: #e1e1e1;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            white-space: normal;
+        }
+        .section-title
+        {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 11px; /* Consistent with body */
+        }
+        .meta-row
+        {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+            font-size: 9px; /* Consistent with body */
+        }
+        .meta-label
+        {
+            font-weight: bold;
+        }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .bold { font-weight: bold; }
+        .bg-light { background-color: #fafafa; }
+        .footer-section
+        {
+            display: flex;
+            min-height: 80px;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+            font-size: 11px; /* Consistent with body */
+        }
+        .declaration-box
+        {
+            width: 75%;
+            padding: 8px;
+            border-right: 1px solid #000;
+            font-size: 11px; /* Consistent with body */
+            line-height: 1.4;
+            text-align: justify;
+        }
+        .signature-box
+        {
+            width: 25%;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 11px; /* Consistent with body */
+        }
+        .signature-title
+        {
+            font-weight: bold;
+        }
+        .signature-line
+        {
+            text-align: center;
+            font-size: 11px; /* Consistent with body */
+            padding-top: 3px;
+            margin-top: 20px;
+        }
+        .summary-row
+        {
+            background-color: #f1dcdb;
+            font-weight: bold;
+        }
+        .total-row
+        {
+            background-color: #e1e1e1;
+            font-weight: bold;
+        }
+        th, td {
+    overflow:hidden;
+    white-space:nowrap;
+}
+th:nth-child(5),
+td:nth-child(5) {
+    width:150px;
+    white-space:normal;
+    word-break:break-word;
+
+}
+    </style>
+</head>
+<body>
+<% function formatDate(date) { if (!date) return ""; const d = new Date(date); const day = String(d.getDate()).padStart(2, '0'); const month = String(d.getMonth() + 1).padStart(2, '0'); const year = d.getFullYear(); return `${day}.${month}.${year}`; } %>
+<div class="packing-list-container">
+    <div class="main-title">PACKING LIST</div>
+    <!-- Top Block Meta Info -->
+    <table>
+        <tr>
+            <td>
+                <span class="section-title">EXPORTER:</span><br>
+                <%= docs.exporterName || "" %><br>
+                <%= docs.exporterAddress ? docs.exporterAddress.replace(/\n/g, '<br>') : "" %><br>
+                <%= docs.exporterCity || "" %>, <%= docs.exporterState || "" %>, <%= docs.exporterPincode || "" %><br>
+                <%= docs.exporterCountry || "" %>
+            </td>
+            <td>
+                <span class="section-title">BUYER ADDRESS:</span><br>
+                <%= docs.buyerName || "" %><br>
+                <%= docs.buyerAddress ? docs.buyerAddress.replace(/\n/g, '<br>') : "" %><br>
+                <%= docs.buyerCity || "" %>, <%= docs.buyerState || "" %>, <%= docs.buyerPincode || "" %><br>
+                <%= docs.buyerCountry || "" %>
+            </td>
+            <td>
+                <span class="section-title">NOTIFY PARTY / DELIVERY ADDRESS:</span><br>
+                <%= docs.notifyPartyName || "" %><br>
+                <%= docs.notifyPartyAddress ? docs.notifyPartyAddress.replace(/\n/g, '<br>') : "" %><br>
+                <%= docs.notifyPartyCity || "" %>, <%= docs.notifyPartyState || "" %>, <%= docs.notifyPartyPincode || "" %><br>
+                <%= docs.notifyPartyCountry || "" %>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="meta-row"><span class="meta-label">Importer</span><span><%= docs.buyerName || "" %></span></div>
+                <div class="meta-row"><span class="meta-label">Invoice No</span><span class="bold"><%= docs.buyerInvoiceNumber || "" %></span></div>
+                <div class="meta-row"><span class="meta-label">PO Number</span><span><%= docs.purchaseOrderNumber || "" %></span></div>
+            </td>
+            <td>
+                <div class="meta-row"><span class="meta-label">INCOTERMS:</span><span><%= docs.inCoTerms || "" %></span></div>
+                <div class="meta-row"><span class="meta-label">CBM</span><span><%= Number(docs.totalCBM || 0).toFixed(2) %></span></div>
+                <div class="meta-row"><span class="meta-label">HSN CODE</span><span><%= docs.hsnCode || "" %></span></div>
+                <div class="meta-row"><span class="meta-label">CONTAINER NUMBER:</span><span><%= docs.containerNo || "" %></span></div>
+                <div class="meta-row"><span class="meta-label">CONTAINER SEAL:</span><span><%= docs.containerSealNo || "" %></span></div>
+            </td>
+            <td>
+                <div class="meta-row"><span class="meta-label">No of Qty</span><span><%= docs.totalQuantity || "" %> PCS</span></div>
+                <div class="meta-row"><span class="meta-label">Total Net Weight</span><span><%= Number(docs.totalNetWeight || 0).toFixed(2) %> KGS</span></div>
+                <div class="meta-row"><span class="meta-label">Total Gross Weight</span><span><%= Number(docs.totalGrossWeight || 0).toFixed(2) %> KGS</span></div>
+                <div class="meta-row"><span class="meta-label">Total Cartons</span><span><%= docs.totalNumberOfPackages || "" %> CTNS</span></div>
+            </td>
+        </tr>
+    </table>
+    <!-- Main Item Breakdowns -->
+    <table>
+<colgroup>
+    <col style="width:25px;">
+    <col style="width:25px;">
+    <col style="width:55px;">
+    <col style="width:65px;">
+    <col style="width:150px;">
+    <col style="width:50px;">
+    <col style="width:50px;">
+    <col style="width:35px;">
+    <col style="width:40px;">
+    <col style="width:40px;">
+    <col style="width:45px;">
+    <col style="width:25px;">
+    <col style="width:25px;">
+    <col style="width:25px;">
+    <col style="width:45px;">
+    <col style="width:75px;">
+    <col style="width:75px;">
+    <col style="width:75px;">
+    <col style="width:75px;">
+</colgroup>
+
+<thead>
+        <tr>
+            <th colspan="2">Carton Number</th>
+            <th>PO NO</th>
+            <th>Style Number</th>
+            <th>Product/Style name</th> <!-- Wider column -->
+            <th>Color</th>
+            <th>Article</th>
+            <th>Single Size</th>
+            <th>Qty Per Carton</th>
+            <th>Total Carton</th>
+            <th>Total Qnty</th>
+            <th>L</th>
+            <th>W</th>
+            <th>H</th>
+            <th>CBM</th>
+            <th>Net Weight in Kg/Per Carton</th>
+            <th>Gross Weight in Kg/ Per Carton</th>
+            <th>Total Net Weight in Kg</th>
+            <th>Total Gross Weight in Kg</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% if (docs.listOfItems && docs.listOfItems.length > 0) { %>
+            <% docs.listOfItems.forEach((item, index) => { %>
+                <tr>
+                    <td><%= item.cartonSerialStart || "" %></td>
+                    <td><%= item.cartonSerialEnd || "" %></td>
+                    <td><%= item.purchaseOrderNumber || "" %></td>
+                    <td><%= item.styleNumber || "" %></td>
+                    <td class="text-left"><%= item.styleName || "" %></td> <!-- No wrapping -->
+                    <td><%= item.color || "" %></td>
+                    <td><%= item.articleNumber || "" %></td>
+                    <td><%= item.singleSize || "" %></td>
+                    <td><%= item.qtyPerCarton || "" %></td>
+                    <td><%= item.totalCartons || "" %></td>
+                    <td><%= item.totalQnty || "" %></td>
+                    <td><%= item.packageLength || "" %></td>
+                    <td><%= item.packageWidth || "" %></td>
+                    <td><%= item.packageHeight || "" %></td>
+                    <td><%= Number(item.cbm || 0).toFixed(2) %></td>
+                    <td><%= Number(item.netWeightCtn || 0).toFixed(2) %></td>
+                    <td><%= Number(item.grossWeightCtn || 0).toFixed(2) %></td>
+                    <td><%= Number(item.netWeight || 0).toFixed(2) %></td>
+                    <td><%= Number(item.grossWeight || 0).toFixed(2) %></td>
+                </tr>
+            <% }); %>
+        <% } %>
+    </tbody>
+</table>
+    <!-- Legal Declaration and Authorised Signatory Footer -->
+    <div class="footer-section">
+        <div class="declaration-box">
+            The exporter <span class="bold">INREX<%= docs.ieCodeNumber || "0713012480" %>TC003</span> of the products covered by this document declares that, except where otherwise clearly indicated, these products are of <span class="bold" style="text-decoration: underline;">INDIAN</span> Preferential Origin according to rules of origin of Generalised System of Preferences of European Union and that the origin criterion met is "P".
+        </div>
+        <div class="signature-box">
+            <span class="signature-title">For <%= docs.exporterName || "" %></span>
+            <div class="signature-line">Authorised Signatory</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

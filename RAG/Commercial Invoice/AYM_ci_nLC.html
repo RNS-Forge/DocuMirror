@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>COMMERCIAL INVOICE</title>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 5mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9px;
+            margin: 0;
+            color: #000;
+            line-height: 1.2;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td, th {
+            border: 1px solid #000;
+            padding: 2px 4px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            padding: 2px 0;
+        }
+
+        .bold { font-weight: bold; }
+        .center { text-align: center; }
+        .right { text-align: right; }
+        .left { text-align: left; }
+
+        .item-data-cell {
+            border-top: none !important;
+            border-bottom: none !important;
+            padding: 4px 6px;
+        }
+
+        .no-border { border: none !important; }
+
+        .signature-cell { border: 1px solid #000 !important; }
+
+        .description-cell {
+            line-height: 1.1;
+            padding: 2px 4px;
+        }
+
+        .no-side-border {
+            border-top: none !important;
+            border-bottom: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <%
+        const items = Array.isArray(docs.listOfItems) ? docs.listOfItems : [];
+        const itemCount = items.length || 1;
+
+        // Subtotal of the goods table
+        const itemsAmountSubtotal = items.reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
+    %>
+
+    <table>
+        <colgroup>
+            <col style="width: 9%;" />
+            <col style="width: 8%;" />
+            <col style="width: 8%;" />
+            <col style="width: 4%;" />
+            <col style="width: 4%;" />
+            <col style="width: 4%;" />
+            <col style="width: 4%;" />
+            <col style="width: 4%;" />
+            <col style="width: 15%;" />
+            <col style="width: 15%;" />
+            <col style="width: 12%;" />
+            <col style="width: 6.5%;" />
+            <col style="width: 6.5%;" />
+        </colgroup>
+
+        <!-- TITLE -->
+        <tr>
+            <td colspan="13" class="title">COMMERCIAL INVOICE</td>
+        </tr>
+
+        <!-- EXPORTER / INVOICE NO & DATE / EXPORTER'S REF -->
+        <tr>
+            <td colspan="8" rowspan="2" style="padding: 2px 4px;">
+                <span class="bold">Exporter Name:</span>
+                <div class="bold" style="margin-top: 2px;">
+                    <%= docs.exporterName || "" %>
+                </div>
+                <div style="line-height: 1.1; margin-top: 2px;">
+                    <% if (docs.exporterAddress) { %>
+                        <%- String(docs.exporterAddress).replace(/\n/g, '<br>') %>,
+                    <% } %>
+                    <% if (docs.exporterCity) { %><%= docs.exporterCity %>,<% } %>
+                    <% if (docs.exporterState) { %><%= docs.exporterState %>,<% } %>
+                    <% if (docs.exporterPincode) { %><%= docs.exporterPincode %>,<% } %>
+                    <% if (docs.exporterCountry) { %><%= docs.exporterCountry %>,<% } %>
+                    <br><span class="bold">GSTN: </span><%= docs.gstin || "" %>
+                </div>
+            </td>
+            <td colspan="2" style="padding: 2px 4px; line-height: 1.1;">
+                <span class="bold">Invoice Number</span>
+                <%= docs.commercialInvoiceNumber || "" %>
+                <br />
+                <span class="bold">Date</span>
+                <%= typeof formatDate === 'function' ? formatDate(docs.invoiceDate) : (docs.invoiceDate || '') %>
+            </td>
+            <td colspan="3" class="left">
+                <span class="bold">Exporter's Ref no</span><br />
+                <%= docs.proformaInvoiceNumber || "" %>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="5" class="left">
+                <span class="bold">Buyer's Ref No</span><br />
+                <%= docs.buyerReferenceNumber || "" %>
+                <% if (docs.buyerReferenceDate) { %>
+                    &nbsp;Dated&nbsp;<%= typeof formatDate === 'function' ? formatDate(docs.buyerReferenceDate) : docs.buyerReferenceDate %>
+                <% } %>
+            </td>
+        </tr>
+
+        <!-- APPLICANT/BUYER & SHIP TO -->
+        <tr>
+            <td colspan="8" rowspan="3" style="padding: 2px 4px;">
+                <span class="bold">Applicant/Buyer:</span>
+                <div style="line-height: 1.1; margin-top: 2px;">
+                    <%= docs.buyerName || "" %>
+                    <% if (docs.buyerAddress) { %><br><%- String(docs.buyerAddress).replace(/\n/g, '<br>') %><% } %>
+                    <% if (docs.buyerCity) { %> <%= docs.buyerCity %><% } %>
+                    <% if (docs.buyerState) { %> <%= docs.buyerState %><% } %>
+                    <% if (docs.buyerPincode) { %> <%= docs.buyerPincode %><% } %>
+                    <% if (docs.buyerCountry) { %> <%= docs.buyerCountry %>.<% } %>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="5" class="left">
+                <span class="bold">SHIP TO</span>
+                <div style="margin-top: 2px; line-height: 1.1;">
+                    <div class="bold"><%= docs.notifyPartyName || "" %></div>
+                    <div style="margin-top: 2px;">
+                        <% if (docs.notifyPartyAddress) { %><%- String(docs.notifyPartyAddress).replace(/\n/g, '<br>') %>,<br><% } %>
+                        <%= docs.notifyPartyCity || "" %>,<br />
+                        <%= docs.notifyPartyState || "" %><br>
+                        <%= docs.notifyPartyPincode || "" %>,<br>
+                        <%= docs.notifyPartyCountry || "" %>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" class="left">
+                <span class="bold">Country of Origin of Goods:</span>
+                <div style="margin-top: 1px;"><%= docs.originCountry || "" %></div>
+            </td>
+            <td colspan="3" class="left">
+                <span class="bold">Country of Final Destination:</span>
+                <div style="margin-top: 1px;"><%= docs.destinationCountry || "" %></div>
+            </td>
+        </tr>
+
+        <!-- PRE-CARRIAGE / PLACE OF RECEIPT / TERMS -->
+        <tr>
+            <td colspan="3" class="left">
+                <span class="bold">Pre Carraige by:</span><br>
+                <div style="margin-top: 2px;"><%= docs.preCarriageBy || "" %></div>
+            </td>
+            <td colspan="5" class="left">
+                <span class="bold">Place Of Recipt</span><br>
+                <div style="margin-top: 2px;"><%= docs.placeOfReceipt || "" %></div>
+            </td>
+            <td colspan="5" rowspan="3" style="line-height: 2.3;">
+                <span class="bold">Terms of Delivery & payment:</span><br /><br />
+                <span>PAYMENT TERM:</span> <%= docs.paymentTerms || "" %><br /><br />
+                <span>DELIVERY TERM:</span> <%= docs.inCoTerms || "" %><br />
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" class="left">
+                <span class="bold">vessel/Flight No</span><br>
+                <div style="margin-top: 1px;"><%= docs.vehicleRegistrationNumber || "" %></div>
+            </td>
+            <td colspan="5" class="left">
+                <span class="bold">Port of Loading</span><br>
+                <div style="margin-top: 2px;"><%= docs.portOfLoading || "" %>&nbsp;,&nbsp;<%= docs.originCountry || "" %></div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" class="left">
+                <span class="bold">Port Of Discharge</span><br>
+                <div style="margin-top: 2px;"><%= docs.portOfDischarge || "" %>&nbsp;,&nbsp;<%= docs.destinationCountry || "" %></div>
+            </td>
+            <td colspan="5" class="left">
+                <span class="bold">Final Destination</span><br>
+                <div style="margin-top: 2px;"><%= docs.finalDestination || "" %>&nbsp;,&nbsp;<%= docs.destinationCountry || "" %></div>
+            </td>
+        </tr>
+
+        <!-- GOODS TABLE HEADER -->
+        <tr>
+            <td colspan="3" class="bold">Marks & Nos./<br>Container no.</td>
+            <td colspan="5" class="bold">No. & Kind<br>of Pkgs.</td>
+            <td colspan="2" class="bold center">Description of Goods</td>
+            <td colspan="1" class="bold right">Quantity<br>IN KGS<br>NET WT.</td>
+            <td colspan="1" class="bold right">Rate<br>USD</td>
+            <td colspan="1" class="bold right">Amount<br>USD</td>
+        </tr>
+
+        <!-- ITEMS LOOP -->
+        <% items.forEach((item, index) => { %>
+        <tr>
+            <% if (index === 0) { %>
+            <td colspan="3" rowspan="<%= itemCount %>" style="vertical-align: top; padding: 4px 4px; line-height: 1.2; border-top: none; border-bottom: none;">
+                <div class="bold">Shipping Marks</div>
+                <div class="bold" style="margin-top: 4px;">MADE IN INDIA</div>
+                <% if (docs.containerNo) { %>
+                    <div class="bold" style="margin-top: 4px;">Container No.</div>
+                    <%- String(docs.containerNo).replace(/\n/g, '<br>') %>
+                <% } %>
+                <% if (docs.sealNumber) { %>
+                    <div class="bold" style="margin-top: 4px;">Seal Number</div>
+                    <%- String(docs.sealNumber).replace(/\n/g, '<br>') %>
+                <% } %>
+            </td>
+            <td colspan="5" rowspan="<%= itemCount %>" style="vertical-align: top; padding: 4px 4px; line-height: 1.1; text-align: center; border-top: none; border-bottom: none;">
+                <span class="bold"><%= item.kindOfPackage || "" %> PACKAGES</span>
+            </td>
+            <% } %>
+            <td colspan="2" class="item-data-cell description-cell">
+                <br><br><span class="bold"><%= docs.portOfDischarge || "" %></span> <br><br>
+                <% if (item.marksAndNumbers) { %>MARKS & NOS: <%= item.marksAndNumbers %><br><% } %>
+                <%- String(item.descriptionOfGoods || "").replace(/\n/g, '<br>') %>
+                <% if (item.shade) { %><br>SHADE: <%= item.shade %><% } %>
+                <% if (item.hsnCode) { %><br>H.S. CODE: <%= item.hsnCode %><% } %>
+            </td>
+            <td colspan="1" class="right item-data-cell" style="font-variant-numeric: tabular-nums;">
+                <%= Number(parseFloat(item.totalQuantity) || 0).toFixed(2) %>
+            </td>
+            <td colspan="1" class="right item-data-cell" style="font-variant-numeric: tabular-nums;">
+                <%= Number(parseFloat(item.rate) || 0).toFixed(2) %>
+            </td>
+            <td colspan="1" class="right item-data-cell" style="font-variant-numeric: tabular-nums;">
+                <%= Number(parseFloat(item.amount) || 0).toFixed(2) %>
+            </td>
+        </tr>
+        <% }) %>
+
+        <!-- CIF / FREIGHT SUMMARY -->
+        <tr>
+            <td colspan="3" class="no-side-border"></td>
+            <td colspan="5" class="no-side-border"></td>
+            <td colspan="2" class="description-cell no-side-border">
+                CIF VALUE : <%= docs.currency || '' %> <%= Number(docs.totalAmount || 0).toFixed(2) %><br>
+                FOB VALUE : <%= docs.currency || '' %> <%= Number(docs.fob || 0).toFixed(2) %><br>
+                <% if (docs.freight) { %>FREIGHT : <%= docs.currency || '' %> <%= Number(docs.freight).toFixed(2) %><br><% } %>
+                INSURANCE : <%= docs.currency || '' %> <%= Number(docs.insuranceCharges || 0).toFixed(2) %><br>
+            </td>
+            <td colspan="1" class="no-side-border"></td>
+            <td colspan="1" class="no-side-border"></td>
+            <td colspan="1" class="no-side-border"></td>
+        </tr>
+
+        <!-- QUANTITY / AMOUNT SUBTOTAL ROW -->
+        <tr>
+            <td colspan="3" style="border-top: none; border-bottom:none;"></td>
+            <td colspan="5" style="border-top: none; border-bottom:none;"></td>
+            <td colspan="2" style="border-top: none; border-bottom:none;"></td>
+            <td colspan="1" class="center bold" style="padding: 2px; font-variant-numeric: tabular-nums; border: 1px solid #000;">
+                <%= Number(docs.netWeight || 0).toFixed(3) %>
+            </td>
+            <td colspan="1" style="border-top: none;border-bottom:none; "></td>
+            <td colspan="1" class="right bold" style="padding: 2px; font-variant-numeric: tabular-nums; border: 1px solid #000;">
+                <%= itemsAmountSubtotal.toFixed(3) %>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="3" style="border-top:none;">&nbsp;</td>
+            <td colspan="5" style="border-top:none;">&nbsp;</td>
+            <td colspan="2" style="border-top:none;"><span>LESS DISCOUNT</span></td>
+            <td colspan="1" style="border-top:none;">&nbsp;</td>
+            <td colspan="1" style="border-top:none;">&nbsp;</td>
+            <td colspan="1" style="border-top: none; text-align: center;" class="bold"><%= docs.discount || '' %></td>        </tr>
+
+        <!-- AMOUNT CHARGEABLE IN WORDS / GROSS WEIGHT / TOTAL -->
+        <tr>
+            <td colspan="6" style="vertical-align: top; border-top: none; border-right: none; border-bottom: none;">
+                <span class="bold">Amount Chargeable (in words)</span><br>
+                <%= docs.currency || '' %> <%= docs.amountInWords || '' %>
+            </td>
+            <td style="border: none;"></td>
+
+            <td colspan="2" class="left bold" style="border: none;">GROSS WEIGHT</td>
+            <td colspan="1" class="right bold" style="font-variant-numeric: tabular-nums; border: none;">
+                <%= Number(docs.totalGrossWeight || 0).toFixed(3) %> KGS
+            </td>
+            <td style="border: none;"></td>
+
+            <td colspan="1" class="left bold" style="border: none;">Total</td>
+            <td colspan="1" class="right bold" style="font-variant-numeric: tabular-nums; border: 1px solid #000;">
+                 <%= Number(docs.totalAmount || 0).toFixed(2) %>
+            </td>
+        </tr>
+
+        <!-- DECLARATION -->
+        <tr>
+            <td colspan="13" class="description-cell" style="border-top: none; border-bottom: none;">
+                Declaration :<br>
+                We declare that this Invoice shows the actual price of the goods described and
+                that all particulars are true and correct.
+            </td>
+        </tr>
+        <tr>
+            <td colspan="13" class="description-cell" style="border-top: none; border-bottom: none;">
+                CHICAGO ,IL60695-8926 Make check payable as above in United States Funds and Indicate the name of the seller. All claims against this invoice must be made promptly in writing to Rosenthal & Rosenthal, Inc., Specifying details. No returns or adjustments will be recognized without the
+            </td>
+            
+        </tr>
+        
+        <tr>
+            <td colspan="13" style="border-top:none;border-bottom:none;">
+               &nbsp; 
+            </td>
+        </tr>
+        <!-- BL / S.BILL / RBI / IE CODE + SIGNATURE -->
+        <tr>
+            <td colspan="6" class="description-cell" style="border-top: none;border-right:none;">
+
+                <span class="bold" >BL NO. :</span> <%= docs.blNumber || "" %>
+                <br> <br><br>
+                <span class="bold">S/BILL NO. :</span> <%= docs.sBillNumber || "" %>
+                <br>
+            </td>
+            <td colspan="4" style="border-top:none; border-left:none;">
+                <span class="bold" style="margin-left:40px;">Date</span> <%= typeof formatDate === 'function' ? formatDate(docs.supplierBillDate) : (docs.supplierBillDate || '') %>
+                <br><br><br><span class="bold" style="margin-left:40px;">Date</span> <%= typeof formatDate === 'function' ? formatDate(docs.sBillDate) : (docs.sBillDate || '') %>
+            </td>
+            <td colspan="3" class="signature-cell" style="padding: 4px; text-align: center; box-sizing: border-box; vertical-align: top; border-top: none;">
+                <div style="font-size: 8px; margin-bottom: 2px; text-align: left;">Signature & Date</div>
+                <div style="font-weight: bold; font-size: 8px; margin-bottom: 20px; text-align: left;">FOR <%= docs.exporterName || "" %></div>
+                <div style="font-weight: bold; font-size: 8px; padding-top: 2px; text-align: center;">AUTHORISED SIGNATORY</div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

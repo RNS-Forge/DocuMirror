@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Commercial Invoice</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+            margin: 0;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 3px 4px;
+            vertical-align: top;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 0;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .no-border {
+            border: none;
+        }
+
+        .no-border-bottom {
+            border-bottom: none;
+        }
+
+        .no-border-top {
+            border-top: none;
+        }
+
+        .no-border-right {
+            border-right: none;
+        }
+
+        .no-border-left {
+            border-left: none;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <colgroup>
+            <col style="width:4%">  <!-- col 1 (Shipping Marks) -->
+            <col style="width:4%">  <!-- col 2 (Shipping Marks) -->
+            <col style="width:4%">  <!-- col 3 (Blank) -->
+            <col style="width:3%">  <!-- col 4 (Blank) -->
+            <col style="width:8%">  <!-- col 5 (PO#) -->
+            <col style="width:8%">  <!-- col 6 (Article No) -->
+            <col style="width:3%">  <!-- col 7 (Description) -->
+            <col style="width:2%">  <!-- col 8 (Description) -->
+            <col style="width:5%">  <!-- col 9 (Description) -->
+            <col style="width:5%">  <!-- col 10 (Description) -->
+            <col style="width:5%">  <!-- col 11 (Description) -->
+            <col style="width:5%">  <!-- col 12 (Description) -->
+            <col style="width:5%">  <!-- col 13 (Description) -->
+            <col style="width:3%">  <!-- col 14 (Description) -->
+            <col style="width:4%">  <!-- col 15 (Color) -->
+            <col style="width:4%">  <!-- col 16 (Color) -->
+            <col style="width:4%">  <!-- col 17 (HSN) -->
+            <col style="width:4%">  <!-- col 18 (HSN) -->
+            <col style="width:3%">  <!-- col 19 (Quantity) -->
+            <col style="width:3%">  <!-- col 20 (Quantity) -->
+            <col style="width:3%">  <!-- col 21 (Price) -->
+            <col style="width:3%">  <!-- col 22 (Price) -->
+            <col style="width:4%">  <!-- col 23 (Amount) -->
+            <col style="width:4%">  <!-- col 24 (Amount) -->
+        </colgroup>
+        <!-- TITLE -->
+        <tr>
+            <td colspan="24" class="title">COMMERCIAL INVOICE</td>
+        </tr>
+
+        <!-- ROW: Shipper/Exporter | Invoice No & Date | Exporter Reference -->
+        <tr>
+            <td colspan="8">
+                <b>Exporter:-</b><br>
+                Dibella India,<br>
+                B-309, Anisha Grange,<br>
+                29th Cross, Kaggadasapura<br>
+                Bangalore, Karnataka - 560093<br>
+                India
+            </td>
+            <td colspan="6" class="no-border-right">
+                <b>Invoice No.</b><br>
+                DI-EXP/26-27/057
+            </td>
+            <td colspan="2" class="no-border-left left">
+                <b>Date</b><br>
+                09-May-26
+            </td>
+            <td colspan="8">
+                <b>Bank Details:-</b><br>
+                Account Name: Dibella India<br>
+                BANK : Kotak Mahindra Bank Ltd<br>
+                ACCOUNT NO : 0749510877<br>
+                BRANCH: 22,Ground Floor, MG Road, Bangalore-karanataka- India.<br>
+                SWIFT : KKBKINBBCPC
+            </td>
+        </tr>
+
+        <!-- ROW: Buyer/Consignee | Delivery Address | BL/Shipping Details | Shipper/Exporter Bank -->
+        <tr>
+            <td colspan="8">
+                <b>Buyer Address:-</b><br>
+                NEW WAVE GROUP SA<br>
+                CH. DES POLONAIS 3<br>
+                CH-2016 CORTAILLOD CH<br>
+                SWITZERLAND
+            </td>
+            <td colspan="8">
+                <b>Consignee:-</b><br>
+                TEXTILGROSSISTEN HEFA AB<br>
+                Ucklumsvagen 4<br>
+                SE-444 91 Stenungsund<br>
+                Sweden
+            </td>
+            <td colspan="8">
+                <b>Exporter Ref:-</b><br>
+                IEC NO : 0713012480<br>
+                AD Code: 0180980<br>
+                GST:29ARRPS6899K1Z9
+            </td>
+        </tr>
+
+        <!-- ROW: Pre-Carriage | Place of Receipt | Country of Origin | Country of Final Destination -->
+        <tr>
+            <td colspan="4"><b>Pre-Carriage By</b><br>By Road</td>
+            <td colspan="4"><b>Place of Reciept by Pre Carrier</b><br>Bangalore</td>
+            <td colspan="8"><b>Country of Origin</b><br>India</td>
+            <td colspan="8"><b>Country of Final Destination</b><br>Sweden</td>
+        </tr>
+
+        <!-- ROW: Vessel/Flight | Port of Loading | Payment Terms | Incoterms -->
+        <tr>
+            <td colspan="4"><b>Vessel/Flight No</b><br>BY SEA</td>
+            <td colspan="4"><b>Port of Loading</b><br>TUTICORIN,INDIA</td>
+            <td colspan="8" class="no-border-right"><b>Payment Terms</b><br>L/C 90 DAYS AFTER SHIPMENT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;LC NO-ILCGOT9000005027 DT.24.03.2026</td>
+            <td colspan="8"><b>Incoterms</b><br><span class="bold">FOB -SEA/TUTICORIN-INDIA.</span></td>
+        </tr>
+
+        <!-- ROW: Port of Discharge | Final Destination -->
+        <tr>
+            <td colspan="4"><b>Port of Discharge</b><br>GOTHENBURG (GOTEBURG),SWEDEN</td>
+            <td colspan="4"><b>Final Destination</b><br>GOTHENBURG (GOTEBURG),SWEDEN</td>
+            <td colspan="16">LUT NO( ARN ) AD290326068585K DT 30/03/2026</td>
+        </tr>
+
+        <!-- ITEMS HEADER -->
+        <tr>
+            <th colspan="2">Shipping Marks & Numbers</th>
+            <th colspan="2"></th>
+            <th colspan="1">Infolog New PO#</th>
+            <th colspan="1">Atricle No.</th>
+            <th colspan="8">Description of Goods</th>
+            <th colspan="2">Color <br> Name</th>
+            <th colspan="2">HSN <br> Code</th>
+            <th colspan="2">Quantity in PCS</th>
+            <th colspan="2">Unit Price in USD</th>
+            <th colspan="2">Amount in USD</th>
+        </tr>
+
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top">C573903</td>
+            <td class="no-border-bottom no-border-top">141035</td>
+            <td class="no-border-bottom no-border-top" colspan="8" style="text-align: left;"> 100% FAIRTRADE ORGANIC COTTON WOVEN LADY DENIM L/S SHIRT  (GOTS)</td>
+            <td class="no-border-bottom no-border-top" colspan="2"> 820 Blue</td>
+            <td class="no-border-bottom no-border-top" colspan="2">62063090</td>
+            <td class="no-border-bottom no-border-top" colspan="2">529</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 10.36</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 5,480.44</td>
+        </tr>
+
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top">C573903</td>
+            <td class="no-border-bottom no-border-top">141035</td>
+            <td class="no-border-bottom no-border-top" colspan="8" style="text-align: left;"> 100% FAIRTRADE ORGANIC COTTON WOVEN LADY DENIM L/S SHIRT  (GOTS)</td>
+            <td class="no-border-bottom no-border-top" colspan="2"> 820 Blue</td>
+            <td class="no-border-bottom no-border-top" colspan="2">62063090</td>
+            <td class="no-border-bottom no-border-top" colspan="2">529</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 10.36</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 5,480.44</td>
+        </tr>
+        <!-- ITEMS ROWS -->
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top">C573903</td>
+            <td class="no-border-bottom no-border-top">141035</td>
+            <td class="no-border-bottom no-border-top" colspan="8" style="text-align: left;"> 100% FAIRTRADE ORGANIC COTTON WOVEN LADY DENIM L/S SHIRT  (GOTS)</td>
+            <td class="no-border-bottom no-border-top" colspan="2"> 820 Blue</td>
+            <td class="no-border-bottom no-border-top" colspan="2">62063090</td>
+            <td class="no-border-bottom no-border-top" colspan="2">529</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 10.36</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 5,480.44</td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top">C573903</td>
+            <td class="no-border-bottom no-border-top">141035</td>
+            <td class="no-border-bottom no-border-top" colspan="8" style="text-align: left;"> 100% FAIRTRADE ORGANIC COTTON WOVEN LADY DENIM L/S SHIRT  (GOTS)</td>
+            <td class="no-border-bottom no-border-top" colspan="2"> 820 Blue</td>
+            <td class="no-border-bottom no-border-top" colspan="2">62063090</td>
+            <td class="no-border-bottom no-border-top" colspan="2">529</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 10.36</td>
+            <td class="no-border-bottom no-border-top right" colspan="2">&dollar; 5,480.44</td>
+        </tr>
+        
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td colspan="14" class="no-border-bottom no-border-top" style="text-align: left;">IGCR# 29ARRPS6899K1Z92425004, BOND # 2002278177,BOE# 5039969,5090976,5199749,5221700,5252975,5276679,5482718,5792186,5829947,6009143,6041165,6215826,6328080,6343811,
+6524820,6677165,6785906,6966398,7093883,7132629,7200510,7200514,7230458 -Hangtag , Label.</td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+        <tr class="center">
+            <td class="no-border-bottom no-border-top" colspan="2">&nbsp;</td>
+            <td colspan="2" class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top"></td>
+            <td class="no-border-bottom no-border-top" colspan="8"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+            <td class="no-border-bottom no-border-top" colspan="2"></td>
+        </tr>
+         <tr class="center">
+            <td colspan="2"></td>
+            <td colspan="2"></td>
+            <td></td>
+            <td></td>
+            <td colspan="8"></td>
+            <td colspan="2"></td>
+            <td class="right" colspan="2">Total:-</td>
+            <td colspan="2">4163</td>
+            <td class="right" colspan="2">Total:-</td>
+            <td colspan="2">&dollar; 47,252.86</td>
+        </tr>
+
+        <!-- AMOUNT IN WORDS ROW -->
+        <tr>
+            <td colspan="18">
+                Amount in Words USD:<span style="margin-left: 20px;">FORTY SEVEN THOUSAND TWO HUNDRED FIFTY TWO AND EIGHTY SIX CENTS ONLY.</span>
+            </td>
+            <td colspan="6" rowspan="6">For Dibella India
+                <div style="height:100px"></div>
+                Authorised Signatory
+            </td>
+        </tr>
+
+        <!-- STATEMENT OF ORIGIN / PACKING DETAILS -->
+        <tr>
+            <td colspan="11" rowspan="5">Statement of Origin:The exporter INREX0713012480TC003 of the products covered by this document declares that, except whereotherwise clearly 
+indicated these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of European Union - and 
+that the origin criterion met is   “P”<br><br>
+                Declaration :<br>
+                We declare that this Invoice shows the actual price of the goods described and that all particulars are
+                true and correct.
+            </td>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">Number of Packages</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center">265</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom">CTNS</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">Total Net Weight:</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center">1937.89</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom ">KGS</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">Total Gross Weight:</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center">2345.87</td>
+            <td colspan="2" class="no-border-top no-border-bottom no-border-left">KGS</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right no-border-left no-border-bottom">CBM:</td>
+            <td colspan="2" class="no-border-top no-border-right no-border-left no-border-bottom center">19.46</td>
+            <td colspan="2" class="no-border-top no-border-bottom no-border-left">CBM</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="no-border-top no-border-right">Pcs</td>
+            <td colspan="2" class="no-border-top no-border-left no-border-right center">4163</td>
+            <td colspan="2" class="no-border-top no-border-left">PCS</td>
+        </tr>
+    </table>
+</body>
+
+</html>

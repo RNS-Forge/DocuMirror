@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Packing List</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 8mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 8px;
+            margin: 0;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+        }
+
+        td,
+        th {
+            border: 1px solid #000;
+            padding: 2px;
+            vertical-align: middle;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Columns that legitimately need to wrap (free text / addresses) */
+        .wrap {
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+
+        .nowrap {
+            white-space: nowrap;
+        }
+
+
+        .title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 8px 0;
+
+        }
+
+        .header-yellow {
+            font-weight: bold;
+        }
+
+        .header-yellow th {
+            font-size: 7px;
+            line-height: 1;
+            padding: 2px 1px;
+            vertical-align: middle;
+        }
+
+        .row-green {
+            font-weight: bold;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .left {
+            text-align: left;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .no-border-top {
+            border-top: none;
+        }
+
+        .no-border-bottom {
+            border-bottom: none;
+        }
+
+        .no-border-left {
+            border-left: none;
+        }
+
+        .no-border-right {
+            border-right: none;
+        }
+
+        /* Column widths tuned so PO Number / Description / Style Number
+           stay on a single line, matching the reference layout (Image 1) */
+        /* Carton Serial */
+        .col-serial {
+            width: 2%;
+        }
+
+        .col-to {
+            width: 1%;
+        }
+
+        /* Small numeric columns */
+        .col-cartonno {
+            width: 3%;
+        }
+
+        .col-color {
+            width: 3%;
+        }
+
+        /* Long text */
+        .col-po {
+            width: 16%;
+        }
+
+        .col-desc {
+            width: 13%;
+        }
+
+        .col-style {
+            width: 10%;
+        }
+
+        /* Size columns */
+        .col-size {
+            width: 2.4%;
+        }
+
+        /* Quantity */
+        .col-pcsctn {
+            width: 3%;
+        }
+
+        .col-quantity{
+            width: 3.5%;
+        }
+
+        /* Carton Dimension */
+        .col-dim {
+            width: 9%;
+        }
+
+        /* Decimal values */
+        .col-cbm {
+            width: 4%;
+        }
+
+        .col-net {
+            width: 7.5%;
+        }
+
+        .col-gross {
+            width: 7.5%;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <table>
+
+            <colgroup>
+                <col style="width:2%">
+                <col style="width:1%">
+                <col style="width:2%">
+
+                <col style="width:3%">
+                <col style="width:15%">
+                <col style="width:12%">
+                <col style="width:9%">
+                <col style="width:3%">
+
+                <col style="width:2.5%">
+                <col style="width:2.5%">
+                <col style="width:2.5%">
+                <col style="width:2.5%">
+                <col style="width:2.5%">
+                <col style="width:2.5%">
+                <col style="width:2.5%">
+
+                <col style="width:3%">
+                <col style="width:4%">
+                <col style="width:8%">
+                <col style="width:4%">
+                <col style="width:6%">
+                <col style="width:6%">
+            </colgroup>
+            <tr>
+                <td colspan="21" class="title">PACKING LIST</td>
+            </tr>
+
+            <tr>
+                <td colspan="7" rowspan="7" class="left wrap" style="vertical-align: top;">
+                    <span class="section-title bold ">EXPORTER:-</span><br>
+                    <%= docs.exporterName || "" %><br>
+                    <%= docs.exporterAddress ? docs.exporterAddress.replace(/\n/g, '<br>') : "" %><br>
+                    <%= docs.exporterCity || "" %>, <%= docs.exporterState || "" %>, <%= docs.exporterPincode || "" %>, <%= docs.exporterCountry || "" %>
+                </td>
+
+                <td colspan="7" rowspan="7" class="left wrap" style="vertical-align: top;">
+                    <span class="bold"> CONSIGNEE:-</span><br>
+                    <%= docs.importerName %><br>
+                    <%= docs.importerAddress %><br>
+                    <%= docs.importerCity %>, <%= docs.importerState %> - <%= docs.importerPincode %><br>
+                    <%= docs.importerCountry %><br>
+                    EORI No. <%= docs.consigneeEori %>
+                </td>
+
+                <td colspan="2" class="left no-border-right no-border-bottom">Inv No.</td>
+                <td colspan="3" class="left no-border-left no-border-right no-border-bottom"><%= docs.invoiceNumber%></td>
+                <td colspan="2" class="center no-border-left no-border-bottom"><%= docs.invoiceDate %></td>
+            </tr>
+            <tr>
+                <td colspan="3" class="left no-border-right no-border-top no-border-bottom">Total Quantity</td>
+                <td colspan="3" class="right no-border-left no-border-right no-border-top no-border-bottom"><%= docs.totalQuantity %></td>
+                <td colspan="1" class="left no-border-left no-border-top no-border-bottom">&nbsp;Pcs</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="left no-border-right no-border-top no-border-bottom">Total Number of Cartons</td>
+                <td colspan="2" class="right no-border-left no-border-right no-border-top no-border-bottom"><%= docs.totalNumberOfPackages%></td>
+                <td colspan="1" class="left no-border-left no-border-top no-border-bottom">&nbsp;Ctns</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="left no-border-right no-border-top no-border-bottom">Total Net Weight</td>
+                <td colspan="2" class="right no-border-left no-border-right no-border-top no-border-bottom"><%= Number(docs.totalNetWeight || 0).toFixed(2) %></td>
+                <td colspan="1" class="left no-border-left no-border-top no-border-bottom">&nbsp;Kgs</td>
+            </tr>
+            <tr>
+                <td colspan="4" class="left no-border-right no-border-top no-border-bottom">Total Gross Weight</td>
+                <td colspan="2" class="right no-border-left no-border-right no-border-top no-border-bottom"><%= Number(docs.totalGrossWeight || 0).toFixed(2) %></td>
+                <td colspan="1" class="left no-border-left no-border-top no-border-bottom">&nbsp;Kgs</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="left no-border-right no-border-top no-border-bottom">Carton Dimension</td>
+                <!-- FIX: JSON fieldname is "dimension", not "cartonDimension" (that name belongs to the child table field) -->
+                <td colspan="3" class="right no-border-left no-border-right no-border-top no-border-bottom"><%= docs.dimension %></td>
+                <td colspan="1" class="left no-border-left no-border-top no-border-bottom">&nbsp;Cms</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="left no-border-right no-border-top">Total CBM</td>
+                <td colspan="3" class="right no-border-left no-border-right no-border-top"><%= Number(docs.totalCbm || 0).toFixed(2) %></td>
+                <td colspan="1" class="left no-border-left no-border-top"></td>
+            </tr>
+
+            <tr class="header-yellow">
+                <th colspan="3" class="col-serial">Carton Serial Number</th>
+                <th class="col-cartonno">Carton Number</th>
+                <th class="col-po">PO Number</th>
+                <th class="col-desc">Description of the Goods</th>
+                <th class="col-style">Style Number</th>
+                <th class="col-color">Color</th>
+                <th class="col-size">34/XXS</th>
+                <th class="col-size">36/XS</th>
+                <th class="col-size">38/S</th>
+                <th class="col-size">40/M</th>
+                <th class="col-size">42/L</th>
+                <th class="col-size">44/XL</th>
+                <th class="col-size">46/XXL</th>
+                <th class="col-pcsctn">No of pcs / Ctns</th>
+                <th class="col-totalpcs">Total Pcs</th>
+                <th class="col-dim">Carton Dimension in Cms</th>
+                <th class="col-cbm">CBM</th>
+                <th class="col-net">Total Net Weight in Kgs</th>
+                <th class="col-gross">Total Gross Weight in Kgs</th>
+            </tr>
+
+            <%
+            // Helper: render a numeric value, but print blank instead of 0 when there is no data.
+            function fmtNum(val, decimals) {
+                const n = Number(val || 0);
+                if (!n) return '';
+                return decimals === undefined ? String(n) : n.toFixed(decimals);
+            }
+
+            // Group items by styleNumber
+            const groups = {};
+            const groupOrder = [];
+            docs.listOfItems.forEach(function(item) {
+                const key = item.styleNumber || '';
+                if (!groups[key]) {
+                    groups[key] = [];
+                    groupOrder.push(key);
+                }
+                groups[key].push(item);
+            });
+        %>
+
+            <% groupOrder.forEach(function(styleKey) {
+            const groupItems = groups[styleKey];
+
+            // Compute group subtotals.
+            // Size and pcs values are PER CARTON, and numberOfPackages is the number of
+            // identical cartons that row represents, so those figures are
+            // multiplied by numberOfPackages before summing into the group total.
+            // Net weight, gross weight, and CBM are summed directly (not multiplied by numberOfPackages).
+            let g34=0, g36=0, g38=0, g40=0, g42=0, g44=0, g46=0, gPcs=0, gquantity=0, gCbm=0, gNet=0, gGross=0, gCartons=0;
+            groupItems.forEach(function(it) {
+                // FIX: child table field is "numberOfPackages", not "cartonNo"
+                const cartonCount = Number(it.numberOfPackages || 0);
+                g34 += cartonCount * Number(it.size34 || 0);
+                g36 += cartonCount * Number(it.size36 || 0);
+                g38 += cartonCount * Number(it.size38 || 0);
+                g40 += cartonCount * Number(it.size40 || 0);
+                g42 += cartonCount * Number(it.size42 || 0);
+                g44 += cartonCount * Number(it.size44 || 0);
+                g46 += cartonCount * Number(it.size46 || 0);
+                
+                gquantity += cartonCount * Number(it.noOfPcs || 0);
+                gCbm += Number(it.cbm || 0);
+                gNet += Number(it.netWeight || 0);
+                gGross += Number(it.grossWeight || 0);
+                gCartons += cartonCount; // total number of physical cartons in this group
+            });
+        %>
+
+            <% groupItems.forEach(function(item) { %>
+            <tr>
+                <td class="col-serial"><%= item.cartonSerialStart %></td>
+                <td class="col-to">TO</td>
+                <td class="col-serial"><%= item.cartonSerialEnd %></td>
+                <!-- FIX: numberOfPackages, not cartonNo -->
+                <td class="col-cartonno nowrap"><%= item.numberOfPackages %></td>
+                <!-- FIX: purchaseOrderNumber, not poNumber -->
+                <td class="col-po nowrap"><%= item.purchaseOrderNumber %></td>
+                <!-- FIX: descriptionOfGoods, not description -->
+                <td class="col-desc wrap"><%= item.descriptionOfGoods %></td>
+                <td class="col-style nowrap"><%= item.styleNumber %></td>
+                <td class="col-color"><%= item.color %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size34) %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size36) %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size38) %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size40) %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size42) %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size44) %></td>
+                <td class="col-size nowrap"><%= fmtNum(item.size46) %></td>
+                <td class="col-pcsctn nowrap"><%= fmtNum(item.noOfPcs) %></td>
+                <td class="col-totalpcs nowrap"><%= fmtNum(item.quantity) %></td>
+                <td class="col-dim nowrap"><%= item.cartonDimension %></td>
+                <td class="col-cbm nowrap"><%= fmtNum(item.cbm, 2) %></td>
+                <td class="col-net nowrap"><%= fmtNum(item.netWeight, 3) %></td>
+                <td class="col-gross nowrap"><%= fmtNum(item.grossWeight, 2) %></td>
+            </tr>
+            <% }); %>
+
+            <% /* Green subtotal row per style group */ %>
+            <tr class="row-green">
+                <td colspan="3"></td>
+                <td><%= fmtNum(gnumberOfPackagess) %></td>
+                <td colspan="4"></td>
+                <td><%= fmtNum(g34) %></td>
+                <td><%= fmtNum(g36) %></td>
+                <td><%= fmtNum(g38) %></td>
+                <td><%= fmtNum(g40) %></td>
+                <td><%= fmtNum(g42) %></td>
+                <td><%= fmtNum(g44) %></td>
+                <td><%= fmtNum(g46) %></td>
+                <td></td>
+                <td><%= fmtNum(gquantity) %></td>
+                <td></td>
+                <td><%= fmtNum(gCbm, 2) %></td>
+                <td><%= fmtNum(gNet, 3) %></td>
+                <td><%= fmtNum(gGross, 2) %></td>
+            </tr>
+
+            <% }); %>
+
+            <tr>
+                <td colspan="3"></td>
+                <td><%= fmtNum(docs.totalNumberOfPackages) %></td>
+                <td colspan="4"></td>
+                <td><%= fmtNum(docs.total34) %></td>
+                <td><%= fmtNum(docs.total36) %></td>
+                <td><%= fmtNum(docs.total38) %></td>
+                <td><%= fmtNum(docs.total40) %></td>
+                <td><%= fmtNum(docs.total42) %></td>
+                <td><%= fmtNum(docs.total44) %></td>
+                <td><%= fmtNum(docs.total46) %></td>
+                <td></td>
+                <td><%= fmtNum(docs.totalQuantity) %></td>
+                <td></td>
+                <td><%= fmtNum(docs.totalCbm, 2) %></td>
+                <td><%= fmtNum(docs.totalNetWeight, 2) %></td>
+                <td><%= fmtNum(docs.totalGrossWeight, 2) %></td>
+            </tr>
+
+            <tr>
+                <td colspan="17" class="left wrap" style="vertical-align: top; height: 60px;">
+                    <span class="bold">Statement of Origin:</span>The exporter INREX0713012480TC003 of the products covered by this document declares that, except whereotherwise<br>For Dibella India
+                        clearly indicated these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of<br> 
+                        European Union - and that the origin criterion met is   "P"
+                </td>
+                <td colspan="4" class="left">
+                    For <%= docs.exporterName %>
+                    <div style="height:65px;"></div>
+                    Authorised Signatory
+                </td>
+            </tr>
+        </table>
+</body>
+
+</html>

@@ -1,0 +1,282 @@
+<%
+const n2 = v => (v === null || v === undefined || v === '') ? '' : Number(v).toFixed(2);
+const n3 = v => (v === null || v === undefined || v === '') ? '' : Number(v).toFixed(3);
+
+function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+}
+%>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Packing List - <%= docs.invoice.no %></title>
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8px !important;
+    color: #000;
+    margin: 0;
+    padding: 10px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    font-size: 8px !important;
+  }
+  table, th, td {
+    border: 1px solid #000;
+    font-size: 8px !important;
+  }
+  th, td {
+    padding: 2px 3px;
+    vertical-align: middle;
+    text-align: center;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+  #mainTable tbody td { overflow-wrap: break-word; }
+
+  .no-border td, .no-border th { border: none; }
+
+  #headerTable {
+    border: none;
+    font-size: 8px !important;
+  }
+  #headerTable td {
+    padding: 3px 5px;
+    vertical-align: top;
+    font-size: 8px !important;
+  }
+  #headerTable .label-row td {
+    background: #ffffff;
+    font-size: 8px !important;
+  }
+  .title-row td {
+    text-align: center;
+    font-weight: bold;
+    font-size: 10px !important;
+    padding: 5px;
+  }
+  .label { font-weight: bold; text-decoration: underline; }
+  .left { text-align: left; }
+  .right { text-align: right; }
+  .bold { font-weight: bold; font-size: 8px !important; }
+
+  #mainTable thead th {
+    background: #e6e6e6;
+    font-weight: bold;
+    font-size: 8px !important;
+    line-height: 1.25;
+  }
+  #mainTable tbody td { background: #fff; }
+
+  .blue-row td {
+    background: #cfe2f3 !important;
+    font-weight: bold;
+    font-size: 8px !important;
+  }
+  .orange-row td {
+    background: #fce5cd !important;
+    font-weight: bold;
+    font-size: 8px !important;
+  }
+
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 5px;
+    line-height: 1.2;
+    font-size: 8px !important;
+  }
+  .summary-item .item-label { text-align: left; width: 55%; }
+  .summary-item .item-val { text-align: right; width: 25%; font-weight: bold; }
+  .summary-item .item-unit { text-align: left; padding-left: 5px; width: 20%; }
+
+  #mainTable td {
+    padding: 2px 3px;
+    text-align: center;
+    font-size: 8px !important;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP HEADER INFO SECTION -->
+<table id="headerTable">
+  <tr class="title-row">
+    <td colspan="4" style="font-size: 16px; font-weight: bold;">PACKING LIST</td>
+  </tr>
+
+  <tr class="label-row">
+    <td style="width:25%; text-align: left;">Exporter:-</td>
+    <td style="width:25%; text-align: left;">Buyer Address:-</td>
+    <td style="width:25%; text-align: left;">Consignee:-</td>
+    <td style="width:14%; text-align: left;">Inv No. &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <%= docs.invoice.no %> <br> DATE <%= formatDate(docs.invoice.date) %></td>
+  </tr>
+
+  <tr>
+    <td class="left">
+      <div class="bold"><%= docs.exporter.name %></div>
+      <% docs.exporter.lines.forEach(function(line) { %>
+        <div><%= line %></div>
+      <% }); %>
+    </td>
+    <td class="left">
+      <div class="bold"><%= docs.buyer.name %></div>
+      <% docs.buyer.lines.forEach(function(line) { %>
+        <div><%= line %></div>
+      <% }); %>
+    </td>
+    <td class="left">
+      <div class="bold"><%= docs.consignee.name %></div>
+      <% docs.consignee.lines.forEach(function(line) { %>
+        <div><%= line %></div>
+      <% }); %>
+    </td>
+    <td style="padding: 0; border-top: none;">
+      <table style="border:none;">
+        <% docs.headerSummary.forEach(function(item) { %>
+          <tr>
+            <td class="right" style="border: none; padding: 2px 5px; font-weight: bold;"><%= item.value %></td>
+            <td class="left" style="border: none; padding: 2px 5px;"><%= item.unit %></td>
+          </tr>
+        <% }); %>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- MAIN PACKING TABLE -->
+<table id="mainTable">
+  <thead>
+    <tr>
+      <th colspan="3" rowspan="2">Carton Serial<br/>Number</th>
+      <th rowspan="2">Carton<br/>Numbers</th>
+      <th rowspan="2">Purchase Order<br/>Number</th>
+      <th rowspan="2" style="width: 4%;">Style<br/>Number</th>
+      <th rowspan="2" style="width: 15%;">Style Name</th>
+      <th rowspan="2" style="width: 4%;">Color #</th>
+      <th rowspan="2" style="width: 12%;">Color Name</th>
+      <th style="width: 2%;">XS</th>
+      <th style="width: 2%;">S</th>
+      <th style="width: 2%;">M</th>
+      <th style="width: 2%;">L</th>
+      <th style="width: 2%;">XL</th>
+      <th style="width: 2%;">2XL</th>
+      <th style="width: 2%;">3XL</th>
+      <th style="width: 2%;">4XL</th>
+      <th style="width: 2%;">5XL</th>
+      <th rowspan="2" class="col-pcs-ctn">No of Pcs<br/>/ Ctns</th>
+      <th rowspan="2" class="col-tot-pcs">Total<br/>Pcs</th>
+      <th colspan="3">Carton Dimension<br/>in Cms</th>
+      <th rowspan="2" class="col-wt-gross" style="width: 5%;">Total Gross<br/>Weight in Kgs</th>
+      <th rowspan="2" class="col-wt-net" style="width: 5%;">Total Net<br/>Weight in Kgs</th>
+      <th rowspan="2" class="col-cbm" style="width: 5%;">Total<br/>CBM</th>
+    </tr>
+    <tr>
+      <th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th>
+      <th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th><th>&nbsp;</th>
+      <th class="col-dim">L</th>
+      <th class="col-dim">W</th>
+      <th class="col-dim">H</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% docs.groups.forEach(function(group, groupIndex) { %>
+      <% group.styles.forEach(function(style, styleIndex) { %>
+        <% style.colors.forEach(function(color, colorIndex) { %>
+          <tr>
+            <% if (colorIndex === 0 && styleIndex === 0) { %>
+              <td rowspan="<%= group.rowSpan %>"><%= group.serialFrom %></td>
+              <td rowspan="<%= group.rowSpan %>" style="font-size: 8px;">TO</td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.serialTo %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.cartonNumbers %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.poNumber %></td>
+            <% } %>
+
+            <% if (colorIndex === 0) { %>
+              <td class="style-cell" rowspan="<%= style.rowSpan %>"><%= style.styleNumber %></td>
+              <td class="style-cell left" rowspan="<%= style.rowSpan %>"><%= style.styleName %></td>
+            <% } %>
+
+            <td><%= color.code %></td>
+            <td class="left"><%= color.name %></td>
+
+            <td><%= (color.sizeCol === 0) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 1) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 2) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 3) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 4) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 5) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 6) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 7) ? color.qty : '' %></td>
+            <td><%= (color.sizeCol === 8) ? color.qty : '' %></td>
+
+            <% if (colorIndex === 0 && styleIndex === 0) { %>
+              <td rowspan="<%= group.rowSpan %>"><%= group.noOfPcsPerCtn %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.totalPcs %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.dims.l %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.dims.w %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= group.dims.h %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= n2(group.grossWeight) %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= n2(group.netWeight) %></td>
+              <td rowspan="<%= group.rowSpan %>"><%= n3(group.cbm) %></td>
+            <% } %>
+          </tr>
+        <% }); %>
+      <% }); %>
+    <% }); %>
+  </tbody>
+  <tfoot>
+    <tr class="blue-row">
+      <td></td><td></td><td></td>
+      <td><%= docs.grandTotal.totalCartons %></td>
+      <td></td><td></td><td></td><td></td><td></td>
+      <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+      <td></td>
+      <td><%= docs.grandTotal.totalQuantity %></td>
+      <td></td><td></td><td></td>
+      <td><%= n2(docs.grandTotal.netWeight) %></td>
+      <td><%= n2(docs.grandTotal.grossWeight) %></td>
+      <td><%= n3(docs.grandTotal.cbm) %></td>
+    </tr>
+    <tr class="orange-row">
+      <td colspan="2" class="left" style="font-weight: bold;">Total Cartons</td>
+      <td></td>
+      <td><%= docs.grandTotal.totalCartons %></td>
+      <td></td><td></td><td></td><td></td><td></td>
+      <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+      <td colspan="2" class="right" style="font-weight: bold;">Total Quantity</td>
+      <td><%= docs.grandTotal.totalQuantity %></td>
+      <td></td><td></td><td></td>
+      <td><%= n2(docs.grandTotal.netWeight) %></td>
+      <td><%= n2(docs.grandTotal.grossWeight) %></td>
+      <td><%= n3(docs.grandTotal.cbm) %></td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- FINAL AUTHORIZATION FOOTER -->
+<table class="footer-block" style="width: 100%; border-top:none;">
+  <tr style="background: none;">
+    <td style="width:65%; border: 1px solid #000;border-top:none;"></td>
+    <td class="left" style="width:35%; border: 1px solid #000; padding: 10px;border-top:none; height: 100px; vertical-align: top;">
+      For <span><%= docs.exporter.name %></span><br/><br/><br/><br/>
+      Authorised Signatory
+    </td>
+  </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Packing List - <%= docs.invoiceNo %></title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 6mm;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 7px;
+            margin: 0;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        td, th {
+            border: 1px solid #000;
+            padding: 3px 1px;
+            vertical-align: middle;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            padding: 5px 0;
+        }
+
+        .header-blue, .row-subtotal, .row-grand-total {
+            font-weight: bold;
+        }
+
+        .bold { font-weight: bold; }
+        .left { text-align: left; }
+        .right { text-align: right; }
+
+        .inner-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
+        }
+        .inner-table td {
+            border: none;
+            padding: 1px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+    <%
+        function formatDate(date) {
+            if (!date) return "";
+            const d = new Date(date);
+            if (isNaN(d.getTime())) return "";
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+
+        function addressLine() {
+            return Array.from(arguments)
+                .filter(v => v && String(v).trim() !== "")
+                .join(", ");
+        }
+    %>
+
+    <table>
+        <!-- Title Row -->
+        <tr>
+            <td colspan="28" class="title">PACKING LIST</td>
+        </tr>
+
+        <!-- Header Row: Exporter, Buyer, importer, Invoice Info -->
+        <tr>
+            <td colspan="7" class="left"><span class="bold">Exporter:-</span><br></td>
+            <td colspan="7" class="left"><span class="bold">Buyer Address:-</span><br></td>
+            <td colspan="7" class="left"><span class="bold">Consignee:-</span><br></td>
+            <td colspan="7" class="left" style="font-size:bold;">Inv No.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= docs.invoiceNo || "" %></td>
+        </tr>
+
+        <!-- Addresses and Summary -->
+        <tr>
+            <td colspan="7" class="left" style="vertical-align: top; padding: 4px;">
+                <%= docs.exporterName || "" %><br>
+                <%= addressLine(docs.exporterAddress, docs.exporterCity, docs.exporterState, docs.exporterPincode, docs.exporterCountry) %>
+            </td>
+            <td colspan="7" class="left" style="vertical-align: top; padding: 4px;">
+                <%= docs.buyerName || "" %><br>
+                <%= addressLine(docs.buyerAddress, docs.buyerCity, docs.buyerState, docs.buyerPincode, docs.buyerCountry) %>
+            </td>
+            <td colspan="7" class="left" style="vertical-align: top; padding: 4px;">
+                <%= docs.importerName || "" %><br>
+                <%= addressLine(docs.importerAddress, docs.importerCity, docs.importerState, docs.importerPincode, docs.importerCountry) %>
+            </td>
+            <td colspan="7" class="left" style="vertical-align: top; padding: 4px;">
+                <table class="inner-table">
+                    <tr><td>Total Quantity</td><td><%= docs.totalQuantity || 0 %> Pcs</td></tr>
+                    <tr><td>Total Number of Packages</td><td><%= docs.totalNumberOfPackages || 0 %> Ctns</td></tr>
+                    <tr><td>Total Net Weight</td><td><%= Number(docs.totalNetWeight || 0).toFixed(2) %> Kgs</td></tr>
+                    <tr><td>Total Gross Weight</td><td><%= Number(docs.totalGrossWeight || 0).toFixed(2) %> Kgs</td></tr>
+                    <tr><td>Total CBM</td><td><%= Number(docs.totalCbm || 0).toFixed(3) %> CBM</td></tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Main Table Header -->
+        <tr class="header-blue">
+            <th colspan="3" rowspan="2">Carton Serial Number</th>
+            <th rowspan="2">Carton<br>Numbers</th>
+            <th rowspan="2">Purchase Order<br>Number</th>
+            <th rowspan="2">Description</th>
+            <th rowspan="2">Article Number</th>
+            <th rowspan="2">Color Name</th>
+            <th rowspan="2">XXS</th>
+            <th rowspan="2">XS</th>
+            <th rowspan="2">S</th>
+            <th rowspan="2">M</th>
+            <th rowspan="2">L</th>
+            <th rowspan="2">XL</th>
+            <th rowspan="2">2XL</th>
+            <th rowspan="2">3XL</th>
+            <th rowspan="2">4XL</th>
+            <th rowspan="2">5XL</th>
+            <th rowspan="2">No of Pcs /<br>Ctns</th>
+            <th rowspan="2">Total Pcs</th>
+            <th colspan="3">Carton Dimension in Cms</th>
+            <th rowspan="2">NET WT. IN<br>KGS/PER BOX</th>
+            <th rowspan="2">GROSS WT. IN<br>KGS/PER BOX</th>
+            <th rowspan="2">Total Net<br>Weight in Kgs</th>
+            <th rowspan="2">Total Gross<br>Weight in Kgs</th>
+            <th rowspan="2">Total CBM</th>
+        </tr>
+        <tr class="header-blue">
+            <th>L</th>
+            <th>W</th>
+            <th>H</th>
+        </tr>
+
+        <!-- Main Table Body with Colgroup -->
+        <colgroup>
+            <col style="width: 2%;"> <!-- Carton Serial Start -->
+            <col style="width: 1%;"> <!-- TO -->
+            <col style="width: 2%;"> <!-- Carton Serial End -->
+            <col style="width: 2%;"> <!-- Carton Numbers -->
+            <col style="width: 4%;"> <!-- PO Number -->
+            <col style="width: 8%;"> <!-- Description -->
+            <col style="width: 4%;"> <!-- Article Number -->
+            <col style="width: 10%;"> <!-- Color Name -->
+            <col style="width: 2%;"> <!-- XXS -->
+            <col style="width: 2%;"> <!-- XS -->
+            <col style="width: 2%;"> <!-- S -->
+            <col style="width: 2%;"> <!-- M -->
+            <col style="width: 2%;"> <!-- L -->
+            <col style="width: 2%;"> <!-- XL -->
+            <col style="width: 2%;"> <!-- 2XL -->
+            <col style="width: 2%;"> <!-- 3XL -->
+            <col style="width: 2%;"> <!-- 4XL -->
+            <col style="width: 2%;"> <!-- 5XL -->
+            <col style="width: 3%;"> <!-- No of Pcs / Ctns -->
+            <col style="width: 3%;"> <!-- Total Pcs -->
+            <col style="width: 2%;"> <!-- Dim L -->
+            <col style="width: 2%;"> <!-- Dim W -->
+            <col style="width: 2%;"> <!-- Dim H -->
+            <col style="width: 3%;"> <!-- NET WT. IN KGS/PER BOX -->
+            <col style="width: 3%;"> <!-- GROSS WT. IN KGS/PER BOX -->
+            <col style="width: 3%;"> <!-- Total Net Weight in Kgs -->
+            <col style="width: 3%;"> <!-- Total Gross Weight in Kgs -->
+            <col style="width: 3%;"> <!-- Total CBM -->
+        </colgroup>
+
+        <!-- Grouped Items by Color -->
+        <%
+            const groups = {};
+            const groupOrder = [];
+
+            docs.listOfItems.forEach(function(item) {
+                const key = item.colorName || 'group';
+                if (!groups[key]) {
+                    groups[key] = [];
+                    groupOrder.push(key);
+                }
+                groups[key].push(item);
+            });
+        %>
+
+        <% groupOrder.forEach(function(groupKey) {
+            const groupItems = groups[groupKey];
+            let gCartons = 0, gTotalPcs = 0, gNet = 0, gGross = 0, gCbm = 0;
+
+            groupItems.forEach(function(it) {
+                gCartons += Number(it.numberOfPackages || 0);
+                gTotalPcs += Number(it.quantity || 0);
+                gNet += Number(it.netWeight || 0);
+                gGross += Number(it.grossWeight || 0);
+                gCbm += Number(it.cbm || 0);
+            });
+        %>
+
+            <% groupItems.forEach(function(item) { %>
+                <tr>
+                    <td><%= item.cartonSerialStart || "" %></td>
+                    <td>TO</td>
+                    <td><%= item.cartonSerialEnd || "" %></td>
+                    <td><%= item.numberOfPackages || "" %></td>
+                    <td><%= item.poNumber || "" %></td>
+                    <td class="left"><%= item.descriptionOfGoods || "" %></td>
+                    <td><%= item.articleNumber || "" %></td>
+                    <td class="left"><%= item.colorName || "" %></td>
+
+                    <td><%= item.sizeXxs || "" %></td>
+                    <td><%= item.sizeXs || "" %></td>
+                    <td><%= item.sizeS || "" %></td>
+                    <td><%= item.sizeM || "" %></td>
+                    <td><%= item.sizeL || "" %></td>
+                    <td><%= item.sizeXl || "" %></td>
+                    <td><%= item.sizeXxl || "" %></td>
+                    <td><%= item.sizeXxxl || "" %></td>
+                    <td><%= item.size4Xl || "" %></td>
+                    <td><%= item.size5Xl || "" %></td>
+
+                    <td><%= item.noOfPcs || "" %></td>
+                    <td><%= item.quantity || "" %></td>
+
+                    <td><%= item.packageLength || "" %></td>
+                    <td><%= item.packageWidth || "" %></td>
+                    <td><%= item.packageHeight || "" %></td>
+
+                    <td><%= item.netWeightCarton ? Number(item.netWeightCarton).toFixed(1) : "" %></td>
+                    <td><%= item.grossWeightCarton ? Number(item.grossWeightCarton).toFixed(1) : "" %></td>
+
+                    <td><%= item.netWeight ? Number(item.netWeight).toFixed(2) : "" %></td>
+                    <td><%= item.grossWeight ? Number(item.grossWeight).toFixed(2) : "" %></td>
+                    <td><%= item.cbm ? Number(item.cbm).toFixed(2) : "" %></td>
+                </tr>
+            <% }); %>
+
+            <!-- Subtotal Row for Group -->
+            <tr class="row-subtotal">
+                <td colspan="3"></td>
+                <td><%= gCartons %></td>
+                <td colspan="15"></td>
+                <td><%= gTotalPcs %></td>
+                <td colspan="5"></td>
+                <td><%= gNet ? Number(gNet).toFixed(2) : "" %></td>
+                <td><%= gGross ? Number(gGross).toFixed(2) : "" %></td>
+                <td><%= gCbm ? Number(gCbm).toFixed(2) : "" %></td>
+            </tr>
+
+        <% }); %>
+
+        <!-- Grand Total Row -->
+        <tr class="row-grand-total">
+            <td colspan="3"></td>
+            <td><%= docs.totalNumberOfPackages || 0 %></td>
+            <td colspan="15"></td>
+            <td><%= docs.totalQuantity || 0 %></td>
+            <td colspan="5"></td>
+            <td><%= Number(docs.totalNetWeight || 0).toFixed(2) %></td>
+            <td><%= Number(docs.totalGrossWeight || 0).toFixed(2) %></td>
+            <td><%= Number(docs.totalCbm || 0).toFixed(3) %></td>
+        </tr>
+
+        <!-- Footer: Statement of Origin and Signature -->
+        <tr>
+            <td colspan="22" class="left" style="vertical-align: top; height: 60px; padding: 4px;">
+                <span class="bold">Statement of Origin:</span>The exporter INREX0713012480TC003 of the products covered by this document declares that, except where otherwise clearly indicated these products are of INDIAN Preferential Origin according to rules of origin of Generalised System of Preferences of European Union and that the origin criterion met is “P”
+            </td>
+            <td colspan="6" class="left" style="vertical-align: top; height: 60px; padding: 4px;">
+                <div style="height: 100%; position: relative;">
+                    <span style="display:block;">For <%= docs.exporterName || "" %></span><br>
+                    <span style="position: absolute; bottom: 0; left: 0; margin-top:20px;">Authorised Signatory</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

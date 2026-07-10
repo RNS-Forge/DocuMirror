@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Packing List - <%= docs.invoiceNumber || "" %></title>
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 5mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8px;
+      color: #000;
+      padding: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    td, th {
+      border: 1px solid #000;
+      padding: 2px 3px;
+      vertical-align: middle;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      border-top: none;
+      border-bottom: none;
+    }
+
+    .title-row td {
+      text-align: center;
+      font-weight: bold;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 3px;
+      border: 1px solid #000;
+      border-bottom: none;
+    }
+
+    #headerTop td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 3px 5px;
+    }
+
+    .hdr-label {
+      font-weight: bold;
+      font-size: 8.5px;
+    }
+
+    #metaGrid td {
+      vertical-align: top;
+      padding: 2px 4px;
+      font-size: 7.5px;
+    }
+
+    .meta-key {
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .sum-label {
+      text-align: left;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .sum-val {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    #mainTable thead th {
+      font-weight: bold;
+      font-size: 7px;
+      text-align: center;
+      line-height: 1.2;
+      padding: 3px 2px;
+      vertical-align: middle;
+    }
+
+    #mainTable tbody td {
+      text-align: center;
+      font-size: 7.5px;
+    }
+
+    .left {
+      text-align: left !important;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .total-row td {
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #footerTable td {
+      border: 1px solid #000;
+      vertical-align: top;
+      padding: 5px 8px;
+      font-size: 8px;
+      border-top: none;
+    }
+
+    table.packing {
+      border-collapse: collapse;
+      width: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8px;
+    }
+
+    table.packing th, table.packing td {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      text-align: center;
+    }
+
+    table.packing thead th {
+      font-weight: bold;
+    }
+
+    table.packing td.left {
+      text-align: left;
+    }
+
+    table.packing tfoot td {
+      font-weight: bold;
+    }
+
+    table.pallet {
+      border-collapse: collapse;
+      width: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8px;
+      margin-top: 40px;
+    }
+
+    table.pallet th, table.pallet td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      text-align: center;
+    }
+
+    table.pallet thead th {
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <% function formatDate(date) {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  } %>
+
+  <!-- Calculate Totals Dynamically with Fallbacks -->
+  <%
+    const items = docs.listOfItems || [];
+    const calculatedTotalQuantity = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const calculatedTotalNetWeight = items.reduce((sum, item) => sum + (item.netWeight || 0), 0);
+    const calculatedTotalGrossWeight = items.reduce((sum, item) => sum + (item.grossWeight || 0), 0);
+    const calculatedTotalCbm = items.reduce((sum, item) => sum + (item.cbm || 0), 0);
+    const calculatedTotalCartons = items.reduce((sum, item) => sum + (item.totalCarton || 0), 0);
+
+    const totalQuantity = docs.totalQuantity || calculatedTotalQuantity;
+    const totalNetWeight = docs.totalNetWeight || calculatedTotalNetWeight;
+    const totalGrossWeight = docs.totalGrossWeight || calculatedTotalGrossWeight;
+    const totalCbm = docs.totalCbm || calculatedTotalCbm;
+    const totalCartons = docs.totalCartons || calculatedTotalCartons;
+  %>
+
+  <!-- TITLE -->
+  <table>
+    <tr class="title-row">
+      <td>PACKING LIST </td>
+    </tr>
+  </table>
+
+  <!-- TOP 3-COLUMN HEADER -->
+  <table id="headerTop">
+    <tr style="border-bottom: none;">
+      <td colspan="2">
+        <span class="hdr-label">Exporter:-</span><br />
+        <%= docs.exporterName || "" %>,<br />
+        <%- (docs.exporterAddress || "").replace(/\n/g, '<br>') %><br />
+        <%= docs.exporterCity || "" %>, <%= docs.exporterState || "" %> - <%= docs.exporterPincode || "" %>,<br />
+        <%= docs.exporterCountry || "" %><br /><br />
+      </td>
+      <td colspan="2">
+        <span class="hdr-label">Consignee / Delivery address</span><br />
+        <%= docs.importerName || "" %><br />
+        <%- (docs.importerAddress || "").replace(/\n/g, '<br>') %><br />
+        <%= docs.importerCity || "" %>,<br />
+        <%= docs.importerCountry || "" %><br />
+      </td>
+    </tr>
+  </table>
+
+  <!-- META GRID -->
+  <table id="metaGrid">
+    <tr style="border-top: none;">
+      <td colspan="2">
+        <span class="hdr-label">Inv-No &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <%= docs.invoiceNumber || "" %><br /><br />
+        <span class="hdr-label">Description</span> &nbsp;&nbsp;&nbsp; <%= docs.descriptionOfGoods || "" %>
+      </td>
+      <td colspan="1">
+        <span class="hdr-label">BUYER ADDRESS</span><br />
+        <%= docs.buyerName || "" %><br />
+        <%- (docs.buyerAddress || "").replace(/\n/g, '<br>') %><br />
+        <%= docs.buyerCity || "" %>,<br />
+        <%= docs.buyerCountry || "" %><br /><br /><br />
+      </td>
+      <td colspan="1">
+        <span class="hdr-label">Total Qty</span>
+        <span style="float: right;"><%= totalQuantity %> PCS</span><br />
+        <span class="hdr-label">Total Net Weight</span>
+        <span style="float: right;"><%= totalNetWeight.toFixed(2) %> KGS</span><br />
+        <span class="hdr-label">Total Gross Weight</span>
+        <span style="float: right;"><%= totalGrossWeight.toFixed(2) %> KGS</span><br />
+        <span class="hdr-label">Total Cartons</span>
+        <span style="float: right;"><%= docs.totalNumberOfPackages %> CTNS</span><br />
+        <span class="hdr-label">CBM</span>
+        <span style="float: right;"><%= totalCbm.toFixed(2) %></span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- MAIN PACKING TABLE -->
+  <table class="packing">
+    <colgroup>
+      <col style="width:4%">  <!-- Carton Number: from -->
+      <col style="width:5%">  <!-- Carton Number: to -->
+      <col style="width:9%">  <!-- STYLE NAME -->
+      <col style="width:18%"> <!-- Color and Size -->
+      <col style="width:2%"> <!-- Blank -->
+      <col style="width:6%">  <!-- OS -->
+      <col style="width:6%">  <!-- Qty Per Carton -->
+      <col style="width:6%">  <!-- Total Carton -->
+      <col style="width:6%">  <!-- Total Qnty -->
+      <col style="width:3%">  <!-- L -->
+      <col style="width:3%">  <!-- W -->
+      <col style="width:3%">  <!-- H -->
+      <col style="width:5%">  <!-- CBM -->
+      <col style="width:6%">  <!-- Net Weight in Kg/Per Carton -->
+      <col style="width:6%">  <!-- Gross Weight in Kg/ Per Carton -->
+      <col style="width:6%">  <!-- Total Net Weight in Kg -->
+      <col style="width:6%">  <!-- Total Gross Weight in Kg -->
+    </colgroup>
+    <thead>
+      <tr>
+        <th colspan="2">Carton Number</th>
+        <th>STYLE NAME</th>
+        <th>Color and Size</th>
+        <th></th>
+        <th>OS</th>
+        <th>Qty Per<br />Carton</th>
+        <th>Total<br />Carton</th>
+        <th>Total Qnty</th>
+        <th>L</th>
+        <th>W</th>
+        <th>H</th>
+        <th>CBM</th>
+        <th>Net Weight<br />in Kg/Per<br />Carton</th>
+        <th>Gross Weight<br />in Kg/ Per<br />Carton</th>
+        <th>Total Net<br />Weight in<br />Kg</th>
+        <th>Total Gross<br />Weight in<br />Kg</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Loop through items -->
+      <% items.forEach((item, index) => { %>
+        <tr>
+          <td><%= item.cartonSerialStart || "" %></td>
+          <td><%= item.cartonSerialEnd || "" %></td>
+          <td class="left"><%= item.styleName || "" %></td>
+          <td class="left"><%= item.colorName || "" %> - SIZE <%= item.size || "" %></td>
+          <td class="left"></td>
+          <td><%= item.sizeOs || "" %></td>
+          <td><%= item.noOfPcs || "" %></td>
+          <td><%= item.numberOfPackages|| "" %></td>
+          <td><%= item.quantity || "" %></td>
+          <td><%= item.packageLength || "" %></td>
+          <td><%= item.packageWidth || "" %></td>
+          <td><%= item.packageHeight || "" %></td>
+          <td><%= (item.cbm || 0).toFixed(2) %></td>
+          <td><%= (item.netWeightCarton || 0).toFixed(2) %></td>
+          <td><%= (item.grossWeightCarton|| 0).toFixed(2) %></td>
+          <td><%= (item.netWeight || 0).toFixed(2) %></td>
+          <td><%= (item.grossWeight || 0).toFixed(2) %></td>
+        </tr>
+      <% }); %>
+
+      <!-- Empty rows for spacing -->
+      <% if (items.length < 10) { %>
+        <% for (let i = 0; i < 10 - items.length; i++) { %>
+          <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+        <% } %>
+      <% } %>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><%= totalCartons %></td>
+        <td><%= totalQuantity %></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td><%= totalCbm.toFixed(2) %></td>
+        <td></td>
+        <td></td>
+        <td><%= totalNetWeight.toFixed(2) %></td>
+        <td><%= totalGrossWeight.toFixed(2) %></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- FOOTER -->
+  <table id="footerTable">
+    <colgroup>
+      <col style="width:73%">
+      <col style="width:27%">
+    </colgroup>
+    <tr>
+      <td style="height:100px; vertical-align:top;">
+        <br>
+        The exporter <span style="font-weight:bold;text-decoration:underline;"> INREX0713012480TC003 </span> of the products covered by this document declares that, except where otherwise clearly indicated these products are of <span style="font-weight:bold; text-decoration:underline;">INDIAN </span> Preferential Origin according to rules of origin of Generalised System of Preferences of European Union and that the origin criterion met is “P”
+      </td>
+      <td style="vertical-align:top; height:100px;">
+        For <%= docs.exporterName || "" %><br /><br /><br /><br />
+        Authorised Signatory
+      </td>
+    </tr>
+  </table>
+
+  <!-- PALLET TABLE -->
+  <table class="pallet">
+    <colgroup>
+      <col style="width:12%">
+      <col style="width:38%">
+      <col style="width:30%">
+      <col style="width:20%">
+    </colgroup>
+    <thead>
+      <tr>
+        <th>S.NO</th>
+        <th>CTN NO'S IN PALLET</th>
+        <th>NO OF CTNS /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PER<br />PALLET</th>
+        <th>DIMENSION</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% (docs.palletTable || []).forEach(function(pallet, index) { %>
+        <tr>
+          <td><%= pallet.id || `Pallet ${index + 1}` %></td>
+          <td><%= pallet.ctnInPallet || "" %></td>
+          <td><%= pallet.ctnsPerPallet || "" %></td>
+          <td><%= pallet.dimension || "" %></td>
+        </tr>
+      <% }); %>
+
+      <!-- Empty rows for spacing -->
+      <% if ((docs.palletTable || []).length < 2) { %>
+        <% for (let i = 0; i < 2 - (docs.palletTable || []).length; i++) { %>
+          <tr>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+          </tr>
+        <% } %>
+      <% } %>
+    </tbody>
+  </table>
+</body>
+</html>
