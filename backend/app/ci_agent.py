@@ -13,17 +13,23 @@ def ci_node(state: dict):
         from app.template_engine import get_template
         from app.rag_indexer import query_vector_store
         
-        # Query RAG for structural hints based on document type
+        # Query RAG for structural hints and strict HTML rules
         rag_hints = query_vector_store("commercial invoice structural layout tables")
+        html_rules = query_vector_store("html rules primary tags classes")
         
         correction_notes = "\n".join(mismatches) if mismatches else ""
+        if html_rules:
+            correction_notes += f"\n\nSTRICT HTML RULES FROM RAG:\n{html_rules}"
         if rag_hints:
             correction_notes += f"\n\nAdditional structural context from RAG:\n{rag_hints}"
             
         data = extract_document(image_bytes, "commercial_invoice", correction_notes)
         raw_fields = data.model_dump()
-        # Mismatches in state are List[str] currently (from mock verifier)
-        draft_html = get_template("commercial_invoice", data, []) 
+        
+        if hasattr(data, 'template_ejs') and data.template_ejs:
+            draft_html = data.template_ejs
+        else:
+            draft_html = get_template("commercial_invoice", data, []) 
     else:
         draft_html = "<html><body><h1>Commercial Invoice</h1></body></html>"
         raw_fields = {"invoice_number": "INV-123", "items": []}

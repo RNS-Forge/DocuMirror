@@ -14,14 +14,21 @@ def pl_node(state: dict):
         from app.rag_indexer import query_vector_store
         
         rag_hints = query_vector_store("packing list structural layout tables")
+        html_rules = query_vector_store("html rules primary tags classes")
         
         correction_notes = "\n".join(mismatches) if mismatches else ""
+        if html_rules:
+            correction_notes += f"\n\nSTRICT HTML RULES FROM RAG:\n{html_rules}"
         if rag_hints:
             correction_notes += f"\n\nAdditional structural context from RAG:\n{rag_hints}"
             
         data = extract_document(image_bytes, "packing_list", correction_notes)
         raw_fields = data.model_dump()
-        draft_html = get_template("packing_list", data, []) 
+        
+        if hasattr(data, 'template_ejs') and data.template_ejs:
+            draft_html = data.template_ejs
+        else:
+            draft_html = get_template("packing_list", data, []) 
     else:
         draft_html = "<html><body><h1>Packing List</h1></body></html>"
         raw_fields = {"packing_list_number": "PL-123", "items": []}

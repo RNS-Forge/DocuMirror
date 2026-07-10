@@ -127,13 +127,19 @@ def _build_extraction_prompt(doc_type: str, correction_notes: str = "") -> str:
         else ""
     )
     return (
-        f"You are a document data extraction expert. "
+        f"You are an advanced document data extraction and HTML generation expert. "
         f"The image shows a '{doc_type.replace('_', ' ')}' document.\n\n"
-        f"Extract ALL visible field values and return them as a single JSON object "
-        f"with two top-level keys:\n"
-        f"1. \"fields\" — matching this schema:\n   {schema_hint}\n"
-        f"2. \"layout\" — visual/structural metadata:\n   {_LAYOUT_FIELDS}\n\n"
-        f"Rules:\n"
+        f"Extract ALL visible field values and reproduce the visual structure. Return a single JSON object "
+        f"with three top-level keys:\n"
+        f"1. \"fields\" — matching this schema:\n   {schema_hint}\n   You may ADD custom fields for calculations (e.g. subtotal, total) or groupings (groupby sections) if present in the image.\n"
+        f"2. \"layout\" — visual/structural metadata:\n   {_LAYOUT_FIELDS}\n"
+        f"3. \"template_ejs\" — The complete HTML EJS template code replicating the document layout exactly. "
+        f"You MUST use only primary tags and follow any HTML tag and CSS rules provided in the RAG hints.\n\n"
+        f"CRITICAL LAYOUT & TEMPLATE RULES:\n"
+        f"- BORDERS: Replicate table borders precisely (use inline styles or classes for missing borders to match image).\n"
+        f"- COMPLEX TABLES: Ensure complex tables use colspan/rowspan attributes where visually merged.\n"
+        f"- DYNAMIC LOGIC & GROUPBY: Use EJS conditionals (`<% if (...) { %>`) to only render loops, subtotals, or groupings IF the data exists. Structure your `fields` JSON to match the relationship of grouped items, and iterate over them in the EJS.\n"
+        f"- CALCULATIONS: Extract and map all sub_total, tax, and total rows accurately in the EJS.\n"
         f"- Preserve exact formatting (dates, amounts, codes) as printed.\n"
         f"- For multiline text (addresses, declarations) use '\\n' as line separator.\n"
         f"- If a field is not visible, set it to null.\n"
@@ -305,9 +311,11 @@ def extract_document(
 
     fields: dict = parsed.get("fields", parsed)  # some models skip the wrapper
     layout_raw: dict = parsed.get("layout", {}) or {}
+    template_ejs: str = parsed.get("template_ejs", "")
 
     # Merge layout into fields dict for Pydantic validation
     fields["layout"] = layout_raw
+    fields["template_ejs"] = template_ejs
 
     # Ensure doc_type is set correctly
     fields["doc_type"] = doc_type

@@ -115,6 +115,7 @@
   .dm-flap { transform-origin: 26px 3px; animation: dm-flap 3.2s ease-in-out infinite; }
   @keyframes dm-flap { 0%, 80%, 100% { transform: rotate(0deg); } 88% { transform: rotate(-14deg); } 94% { transform: rotate(0deg); } }
   .dm-loader.sm { --size: 22px; }
+  .dm-loader.lg { --size: 72px; }
 
 
 
@@ -332,16 +333,20 @@
   .submit-btn.loading .dm-loader { display: block; }
   .submit-btn.loading .btn-text { display: none; }
 
-  .progress-wrap {
-    display: none; width: 100%; background: var(--surface-2); height: 3px;
-    border-radius: var(--radius); margin-top: 18px; overflow: hidden;
+  .overlay-demo-wrap {
+    display: none; align-items: center; justify-content: center;
+    margin-top: 24px; width: 100%;
   }
-  .progress-wrap.visible { display: block; }
-  .progress-bar.indeterminate {
-    height: 100%; width: 30%; background: var(--accent);
-    animation: progress-ind 1.4s infinite linear; transform-origin: 0% 50%;
+  .overlay-demo-wrap.visible { display: flex; }
+  .overlay-demo {
+    width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 18px; box-shadow: var(--shadow-sm);
   }
-  @keyframes progress-ind {
+  .overlay-title { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--ink); }
+  .overlay-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); text-align:center; max-width: 320px; }
+  .overlay-bar { width: 220px; height: 3px; background: var(--paper); border-radius: var(--radius); overflow: hidden; margin-top: 4px; }
+  .overlay-bar-fill { height: 100%; width: 30%; background: var(--accent); animation: dm-indeterminate 1.4s infinite linear; transform-origin: 0 50%; }
+  @keyframes dm-indeterminate {
     0%   { transform: translateX(-100%) scaleX(1); }
     50%  { transform: translateX(150%) scaleX(1.6); }
     100% { transform: translateX(400%) scaleX(1); }
@@ -784,8 +789,31 @@
         <span class="btn-text">Run extraction</span>
       </button>
 
-      <div class="progress-wrap" id="progressWrap">
-        <div class="progress-bar indeterminate" id="progressBar"></div>
+      <div class="overlay-demo-wrap" id="progressWrap">
+        <div class="overlay-demo">
+          <span class="dm-loader lg">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="clip-lg"><path d="M6,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z"/></clipPath>
+                <linearGradient id="scanGrad-lg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+                  <stop offset="50%" stop-color="#ffffff" stop-opacity="0.9"/>
+                  <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
+              <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
+              <g class="dm-flap"><path d="M26,0 L32,6 H26 Z" fill="#163aa3"/></g>
+              <rect x="15.25" y="4" width="1.5" height="24" rx="0.75" fill="#f6f7f9" opacity="0.9"/>
+              <g clip-path="url(#clip-lg)">
+                <rect class="dm-scan-rect" x="0" y="0" width="32" height="10" fill="url(#scanGrad-lg)"/>
+              </g>
+            </svg>
+          </span>
+          <div class="overlay-title" id="overlayTitle">Extracting document</div>
+          <div class="overlay-sub" id="overlaySub">Analyzing layout and mapping fields.</div>
+          <div class="overlay-bar"><div class="overlay-bar-fill"></div></div>
+        </div>
       </div>
 
       <div class="status-msg" id="statusMsg"></div>
@@ -1081,12 +1109,27 @@ function runPipelineAnimation() {
 
   let i = 0;
   const prevId = { v: null };
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlaySub = document.getElementById('overlaySub');
+  
   const timer = setInterval(() => {
     if (prevId.v) setStage(prevId.v, 'done');
     if (i >= seq.length) { clearInterval(timer); return; }
     const [id, msg] = seq[i];
     setStage(id, 'active');
     logLine(msg);
+    
+    if (id === 'verify') {
+      overlayTitle.textContent = 'Verifying extracted layout';
+      overlaySub.textContent = 'Comparing rendered output against the source document. This continues until the similarity target is met.';
+    } else if (id === 'retrieve') {
+      overlayTitle.textContent = 'RAG Retrieval';
+      overlaySub.textContent = 'Querying vector database for structural hints.';
+    } else {
+      overlayTitle.textContent = 'Processing extraction';
+      overlaySub.textContent = msg;
+    }
+    
     prevId.v = id;
     i++;
   }, 850);

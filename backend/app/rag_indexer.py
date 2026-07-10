@@ -23,12 +23,25 @@ def build_vector_store():
     
     # Clear old items if re-running
     if collection.count() > 0:
-        collection.delete(where={})
+        # Instead of deleting with where={}, which errors in some versions,
+        # get all ids and delete them.
+        all_items = collection.get()
+        if all_items["ids"]:
+            collection.delete(ids=all_items["ids"])
     
     docs = []
     metadatas = []
     ids = []
     
+    # 1. Index the HTML rules
+    rules_file = Path(__file__).parent / "html_rules.md"
+    if rules_file.exists():
+        rules_content = rules_file.read_text(encoding="utf-8")
+        docs.append(rules_content)
+        metadatas.append({"doc_type": "global", "chunk_type": "html_rules"})
+        ids.append("global_html_rules")
+    
+    # 2. Index the EJS templates
     for ejs_file in TEMPLATES_DIR.glob("*.ejs"):
         content = ejs_file.read_text(encoding="utf-8")
         
