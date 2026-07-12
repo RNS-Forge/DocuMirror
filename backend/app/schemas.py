@@ -98,6 +98,7 @@ class LayoutMeta(BaseModel):
 class BankDetails(BaseModel):
     model_config = {"extra": "ignore"}
 
+    account_name: Optional[str] = None
     bank_name: Optional[str] = None
     account_no: Optional[str] = None
     swift_code: Optional[str] = None
@@ -119,6 +120,12 @@ class CommercialInvoiceItem(BaseModel):
     sr_no: Optional[str] = None
     description: str = Field(default="", description="Product/goods description")
     hs_code: Optional[str] = Field(None, description="Harmonized System tariff code")
+    hsn_code: Optional[str] = Field(None, description="HSN Code")
+    style_name: Optional[str] = Field(None, description="Style Name")
+    style_no: Optional[str] = Field(None, description="Style No")
+    size: Optional[str] = Field(None, description="Size")
+    article_no: Optional[str] = Field(None, description="Article No")
+    colour: Optional[str] = Field(None, description="Colour")
     qty: str = Field(default="", description="Quantity with unit, e.g. '100 PCS'")
     unit_price: str = Field(default="", description="Price per unit with currency, e.g. 'USD 5.00'")
     amount: str = Field(default="", description="Line total, e.g. 'USD 500.00'")
@@ -150,6 +157,10 @@ class CommercialInvoice(BaseModel):
     gst_no: Optional[str] = Field(None, description="GST / VAT registration number")
     po_no: Optional[str] = Field(None, description="Buyer purchase order number")
     lc_no: Optional[str] = Field(None, description="Letter of Credit number, if any")
+    lut_arn: Optional[str] = Field(None, description="LUT ARN details")
+    lut_date: Optional[str] = Field(None, description="LUT Date, e.g. 30/03/2026")
+    ad_code: Optional[str] = Field(None, description="AD Code details")
+    buyer_tax_id: Optional[str] = Field(None, description="Buyer NIF / tax id")
 
     # Shipment
     incoterms: Optional[str] = Field(None, description="Trade terms, e.g. 'CIF Singapore'")
@@ -157,6 +168,24 @@ class CommercialInvoice(BaseModel):
     port_of_discharge: Optional[str] = None
     vessel_flight: Optional[str] = None
     country_of_origin: Optional[str] = None
+    pre_carriage: Optional[str] = Field(None, description="Pre-carriage by")
+    place_of_receipt: Optional[str] = Field(None, description="Place of receipt by pre-carrier")
+    country_of_destination: Optional[str] = Field(None, description="Country of final destination")
+    final_destination: Optional[str] = Field(None, description="Final destination")
+    terms_of_payment: Optional[str] = Field(None, description="Terms of payment text")
+    terms_of_delivery: Optional[str] = Field(None, description="Terms of delivery details")
+
+    # Packing details
+    marks_and_nos: Optional[str] = Field(None, description="Marks & Nos aggregate details")
+    pcs_count: Optional[str] = Field(None, description="Number of PCS")
+    cartons_count: Optional[str] = Field(None, description="Number of Cartons")
+    carton_dimension: Optional[str] = Field(None, description="Carton dimension details")
+    total_net_weight: Optional[str] = Field(None, description="Total net weight")
+    total_gross_weight: Optional[str] = Field(None, description="Total gross weight")
+
+    # Declarations
+    origin_declaration: Optional[str] = Field(None, description="Exporter origin declaration")
+    invoice_declaration: Optional[str] = Field(None, description="Standard invoice accuracy declaration")
 
     # Financials
     currency: Optional[str] = Field(None, description="ISO currency code, e.g. 'USD'")
@@ -187,6 +216,11 @@ class CommercialInvoice(BaseModel):
             "port_of_discharge","vessel_flight","country_of_origin","currency",
             "total_qty","total_value","amount_in_words","freight_charges",
             "insurance_charges","signatory","declaration",
+            "lut_arn","lut_date","ad_code","buyer_tax_id","pre_carriage","place_of_receipt",
+            "country_of_destination","final_destination","terms_of_payment",
+            "terms_of_delivery","marks_and_nos","pcs_count","cartons_count",
+            "carton_dimension","total_net_weight","total_gross_weight",
+            "origin_declaration","invoice_declaration"
         }
         out = dict(values)
         for f in str_fields:

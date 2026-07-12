@@ -3,341 +3,341 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DocuMirror Code Editor | RNS Solutions</title>
+<title>Code editor — DocuMirror</title>
+<meta name="description" content="Edit the invoice and packing list templates and preview the rendered output live.">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- EJS for client-side rendering (load BEFORE Monaco to avoid AMD conflicts) -->
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- EJS for client-side rendering -->
 <script src="https://cdn.jsdelivr.net/npm/ejs@3.1.9/ejs.min.js"></script>
 <!-- Load Monaco Editor JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
 <style>
-  :root {
-    --bg: #ffffff;
-    --surface: #f8fafc;
-    --surface2: #f1f5f9;
-    --border: #e2e8f0;
-    --border-hover: #cbd5e1;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-    --text: #0f172a;
-    --text-muted: #64748b;
-    --radius: 4px;
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+  :root{
+    --void:        #0b0e13;
+    --void-2:      #141920;
+    --void-3:      #1a2029;
+    --void-line:   rgba(255,255,255,0.09);
+    --void-text:   #e7ebe8;
+    --void-mist:   #8b96a1;
+
+    --paper:       #eef1ee;
+    --ink:         #10131a;
+    --mist:        #5c6670;
+    --line:        rgba(16,19,26,0.12);
+
+    --signal:        #1f4fd8;
+    --signal-bright: #4f7dff;
+    --signal-tint:   #eaf0fe;
+    --signal-ink:    #163aa3;
+
+    --radius: 3px;
+    --font-display: 'JetBrains Mono', monospace;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; cursor: none; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html, body{ height:100%; }
+  body{ font-family: var(--font-body); background: var(--paper); color: var(--ink); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; }
+  a{ color:inherit; text-decoration:none; }
+  button{ font-family:inherit; cursor:pointer; border:none; background:none; }
+  a:focus-visible, button:focus-visible{ outline: 2px solid var(--signal); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
+  header.nav-header{
+    display:flex; justify-content:space-between; align-items:center; padding: 16px 24px;
+    border-bottom: 1px solid var(--line); flex-shrink:0; background:#fff;
+  }
+  .logo{ font-family: var(--font-display); font-size:15px; font-weight:800; letter-spacing:-0.01em; color: var(--ink); display:flex; align-items:center; gap:10px; }
+  .logo-icon{ width:20px; height:20px; }
+  .logo-icon svg{ width:100%; height:100%; }
+  .nav-right{ display:flex; align-items:center; gap:20px; }
+  .corp-link{ color: var(--mist); font-family: var(--font-mono); font-size:10.5px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; }
+  .corp-link::before{ content:'· '; color: var(--signal); }
+  .nav-cta{
+    display:inline-flex; align-items:center; gap:8px; background: var(--ink); color:#fff; font-family: var(--font-mono);
+    font-size:11.5px; font-weight:600; padding:9px 14px; border-radius: var(--radius); transition: background-color .18s ease;
+  }
+  .nav-cta:hover{ background: var(--signal-ink); }
+
+  .editor-shell{ flex:1; display:grid; grid-template-columns: 220px 1fr 1fr; min-height:0; }
+
+  /* ---------- File tree ---------- */
+  .file-tree{ background:#fff; border-right: 1px solid var(--line); padding: 18px 12px; overflow-y:auto; }
+  .file-tree .tree-label{ font-family: var(--font-mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color: var(--mist); padding: 6px 10px 10px; }
+  .file-item{
+    display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding: 9px 10px; border-radius: 4px;
+    font-family: var(--font-mono); font-size:12px; color: var(--ink); transition: background-color .12s ease;
+  }
+  .file-item:hover{ background: var(--paper); }
+  .file-item.active{ background: var(--signal-tint); color: var(--signal-ink); font-weight:600; }
+  .file-item svg{ width:14px; height:14px; flex-shrink:0; stroke: currentColor; fill:none; stroke-width:1.6; opacity:.75; }
+  .file-item .dot-unsaved{ width:6px; height:6px; border-radius:50%; background: var(--signal); margin-left:auto; display:none; flex-shrink:0; }
+  .file-item.unsaved .dot-unsaved{ display:block; }
+
+  /* ---------- Code pane ---------- */
+  .code-pane{ display:flex; flex-direction:column; background: var(--void); min-width:0; border-right: 1px solid var(--void-line); }
+  .pane-head{
+    display:flex; align-items:center; justify-content:space-between; padding: 10px 16px; border-bottom: 1px solid var(--void-line);
+    font-family: var(--font-mono); font-size:11px; color: var(--void-mist); flex-shrink:0;
+  }
+  .pane-head .filename{ color: var(--void-text); }
+  .pane-head .save-state{ font-size:10px; letter-spacing:0.06em; text-transform:uppercase; transition: color .2s; }
+  .pane-head .save-state.dirty{ color: var(--signal-bright); }
+  .pane-head .save-state.saved{ color: var(--void-mist); }
   
-  body, html {
-    font-family: 'Inter', system-ui, sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    height: 100%;
-    overflow: hidden;
-  }
+  .btn-format { font-family: var(--font-mono); font-size:10px; color: var(--void-mist); border: 1px solid var(--void-line); border-radius: 3px; padding: 3px 8px; text-transform: uppercase; transition: all 0.2s; }
+  .btn-format:hover { border-color: var(--signal-bright); color: var(--signal-bright); }
 
-  /* Custom Cursor */
-  .cursor-dot {
-    position: fixed;
-    width: 6px;
-    height: 6px;
-    background-color: var(--accent);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: width 0.2s, height 0.2s, background-color 0.2s;
-  }
-  .cursor-outline {
-    position: fixed;
-    width: 32px;
-    height: 32px;
-    border: 1px solid var(--accent);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    transform: translate(-50%, -50%);
-    transition: transform 0.1s ease-out, width 0.2s, height 0.2s;
-  }
+  .code-wrap{ flex:1; display:flex; overflow:hidden; position:relative; }
+  #editor-container { flex: 1; width: 100%; height: 100%; background: var(--void); }
 
-  /* Paper Background Animation */
-  .paper-bg {
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background-image: 
-      linear-gradient(rgba(226, 232, 240, 0.4) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(226, 232, 240, 0.4) 1px, transparent 1px);
-    background-size: 40px 40px;
-    z-index: -2;
-    pointer-events: none;
-    transform: rotate(-5deg);
-    animation: drift 60s linear infinite;
-  }
-  @keyframes drift {
-    0% { transform: rotate(-5deg) translateY(0); }
-    100% { transform: rotate(-5deg) translateY(40px); }
-  }
+  /* ---------- Preview pane ---------- */
+  .preview-pane{ display:flex; flex-direction:column; background: var(--paper); min-width:0; }
+  .pane-head.light{ background:#fff; border-bottom:1px solid var(--line); color: var(--mist); }
+  .pane-head.light .filename{ color: var(--ink); }
+  #preview-frame{ flex:1; border:none; background:#fff; width:100%; height:100%; }
 
-  /* Layout */
-  .app-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    position: relative;
-    z-index: 1;
-    background: rgba(255, 255, 255, 0.95);
+  footer{
+    display:flex; align-items:center; justify-content:space-between; padding: 10px 20px; background: var(--void);
+    color: var(--void-mist); font-family: var(--font-mono); font-size:10.5px; flex-shrink:0;
   }
+  footer a{ color: var(--void-mist); transition: color .15s ease; }
+  footer a:hover{ color: var(--signal-bright); }
+  .footer-links{ display:flex; gap:18px; }
 
-  /* Header */
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
+  @media (max-width: 960px){
+    .editor-shell{ grid-template-columns: 160px 1fr; }
+    .preview-pane{ display:none; }
   }
-
-  .logo {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+  @media (max-width: 640px){
+    .editor-shell{ grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .file-tree{ display:flex; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line); padding: 10px 8px; gap:4px; }
+    .file-tree .tree-label{ display:none; }
+    .file-item{ white-space:nowrap; }
   }
-  
-  .logo-icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .logo-icon svg { width: 100%; height: 100%; }
-  
-  .header-brand {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .actions {
-    display: flex;
-    gap: 12px;
-  }
-  
-  .btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 16px;
-    border-radius: var(--radius);
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
-  .btn:hover { background: #e2e8f0; border-color: var(--accent); }
-  
-  .btn-primary {
-    background: var(--accent-gradient);
-    color: white;
-    border: none;
-  }
-  .btn-primary:hover {
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
-  }
-
-  /* Workspace */
-  .workspace {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  /* Editor Pane */
-  .editor-pane {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--border);
-    min-width: 0;
-  }
-
-  .tabs {
-    display: flex;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tab {
-    padding: 10px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    border: none;
-    background: none;
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
-  }
-
-  .tab:hover { color: var(--text); }
-  .tab.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-    background: var(--bg);
-  }
-
-  #editor-container {
-    flex: 1;
-    width: 100%;
-  }
-
-  /* Preview Pane */
-  .preview-pane {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--surface2);
-  }
-
-  .preview-header {
-    padding: 10px 20px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .preview-content {
-    flex: 1;
-    padding: 16px;
-    overflow: auto;
-    display: flex;
-    justify-content: center;
-  }
-
-  #preview-frame {
-    width: 100%;
-    max-width: 800px;
-    height: 100%;
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-  }
-
-  a, button { cursor: none !important; }
 </style>
 </head>
 <body>
 
-<div class="cursor-dot" id="cursor-dot"></div>
-<div class="cursor-outline" id="cursor-outline"></div>
-
-<div class="paper-bg"></div>
-
-<div class="app-container">
-  <!-- Header -->
-  <header class="header">
-    <a href="/upload" class="logo">
-      <div class="logo-icon">
+  <header class="nav-header">
+    <a href="index.html" class="logo">
+      <span class="logo-icon" aria-hidden="true">
         <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
           <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
           <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
           <path d="M26,0 L32,6 H26 Z" fill="#163aa3"/>
           <rect x="15.25" y="4" width="1.5" height="24" rx="0.75" fill="#f6f7f9" opacity="0.9"/>
         </svg>
-      </div>
-      <div>Code Editor</div>
+      </span>
+      DocuMirror
     </a>
-    <div class="header-brand">By RNS Solutions</div>
-    <div class="actions">
-      <button class="btn" id="btn-format">Format Code</button>
-      <button class="btn btn-primary" id="btn-run">Run Preview</button>
+    <div class="nav-right">
+      <span class="corp-link">RNS Solutions</span>
+      <a href="#" onclick="window.history.back(); return false;" class="nav-cta">Back</a>
     </div>
   </header>
 
-  <div class="workspace">
-    <!-- Editor Pane -->
-    <div class="editor-pane">
-      <div class="tabs">
-        <button class="tab active" data-file="template.ejs">template.ejs</button>
-        <button class="tab" data-file="data.json">data.json</button>
-      </div>
-      <div id="editor-container"></div>
+  <div class="editor-shell">
+    <div class="file-tree">
+      <div class="tree-label">Templates</div>
+      <button class="file-item active" data-file="invoice">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+        invoice-template.ejs
+        <span class="dot-unsaved"></span>
+      </button>
+      <button class="file-item" data-file="packing">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+        packing-list.ejs
+        <span class="dot-unsaved"></span>
+      </button>
+      <button class="file-item" data-file="data">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9h16M9 9v11"/></svg>
+        data.json
+        <span class="dot-unsaved"></span>
+      </button>
     </div>
 
-    <!-- Preview Pane -->
+    <div class="code-pane">
+      <div class="pane-head">
+        <span class="filename" id="pane-filename">invoice-template.ejs</span>
+        <div style="display:flex; gap:12px; align-items:center;">
+          <button id="btn-format" class="btn-format">Format</button>
+          <span class="save-state saved" id="save-state">Saved</span>
+        </div>
+      </div>
+      <div class="code-wrap" style="position: relative;">
+        <div id="editor-container"></div>
+        
+        <!-- Floating AI Prompt Bar -->
+        <div id="ai-prompt-bar" style="display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:var(--void-2); border:1px solid var(--signal-bright); border-radius:4px; padding:8px 12px; align-items:center; gap:10px; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.6); width:90%; max-width:500px;">
+          <span style="font-family:var(--font-mono); font-size:10px; color:var(--signal-bright); font-weight:bold; letter-spacing:0.05em; text-transform:uppercase;">AI Edit:</span>
+          <input type="text" id="ai-prompt-input" placeholder="What do you want to change in the code?" style="flex:1; background:transparent; border:none; color:var(--void-text); font-family:var(--font-body); font-size:12px; outline:none;" />
+          <button id="btn-ai-submit" style="background:var(--signal-bright); color:#fff; font-family:var(--font-mono); font-size:10px; padding:5px 10px; border-radius:2px; font-weight:bold; text-transform:uppercase; transition: background .12s;">Generate</button>
+          <button id="btn-ai-cancel" style="color:var(--void-mist); font-family:var(--font-mono); font-size:10px; font-weight:bold; text-transform:uppercase; margin-left:4px;">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <div class="preview-pane">
-      <div class="preview-header">
-        <span>Live Preview</span>
-        <span id="render-status" style="font-weight: normal; font-size: 11px; color: var(--success);">Ready</span>
+      <div class="pane-head light" style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="filename">Live preview</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span id="render-status">rendered with sample data</span>
+          <button id="btn-fullscreen" style="font-family: var(--font-mono); font-size: 10px; color: var(--mist); border: 1px solid var(--line); border-radius: 3px; padding: 2px 6px; text-transform: uppercase; transition: all 0.2s;">Fullscreen</button>
+        </div>
       </div>
-      <div class="preview-content">
-        <iframe id="preview-frame" sandbox="allow-same-origin allow-scripts"></iframe>
-      </div>
+      <iframe id="preview-frame" title="Template preview" allowfullscreen="true"></iframe>
     </div>
   </div>
-</div>
+
+  <footer>
+    <span>© 2026 RNS Solutions — DocuMirror</span>
+    <div class="footer-links">
+      <a href="upload.html">Extractor</a>
+      <a href="agent.html">Agent Pipeline</a>
+      <a href="codeeditor.html">Code editor</a>
+    </div>
+  </footer>
 
 <script>
-  // Custom Cursor
-  const cursorDot = document.getElementById('cursor-dot');
-  const cursorOutline = document.getElementById('cursor-outline');
+  const invoiceTemplate = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body{ font-family: Arial, sans-serif; padding: 32px; color:#10131a; }
+  h1{ font-size: 18px; margin-bottom: 4px; }
+  .muted{ color:#5c6670; font-size: 12px; margin-bottom: 24px; }
+  table{ width:100%; border-collapse: collapse; margin-top: 16px; }
+  th, td{ text-align:left; padding: 8px 10px; border-bottom: 1px solid #dfe3e8; font-size: 13px; }
+  th{ font-size: 11px; text-transform:uppercase; color:#5c6670; }
+  .total-row td{ font-weight:700; border-bottom:none; padding-top:14px; }
+</style>
+</head>
+<body>
+  <h1>Commercial Invoice #<%= invoiceNumber %></h1>
+  <div class="muted">Issued to <%= buyerName %> · <%= issueDate %></div>
+  <table>
+    <tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr>
+    <% if (typeof items !== 'undefined') { %>
+    <% items.forEach(function(item){ %>
+    <tr><td><%= item.description %></td><td><%= item.qty %></td><td><%= item.unitPrice %></td><td><%= item.amount %></td></tr>
+    <% }); %>
+    <% } %>
+    <tr class="total-row"><td colspan="3">Total</td><td><%= total %></td></tr>
+  </table>
+</body>
+</html>`;
 
-  window.addEventListener('mousemove', function (e) {
-    const posX = e.clientX;
-    const posY = e.clientY;
+  const packingTemplate = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body{ font-family: Arial, sans-serif; padding: 32px; color:#10131a; }
+  h1{ font-size: 18px; margin-bottom: 4px; }
+  .muted{ color:#5c6670; font-size: 12px; margin-bottom: 24px; }
+  ul{ padding-left: 18px; }
+  li{ font-size: 13px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+  <h1>Packing List #<%= shipmentId %></h1>
+  <div class="muted"><%= numCartons %> cartons · Gross weight <%= grossWeight %></div>
+  <ul>
+    <% if (typeof contents !== 'undefined') { %>
+    <% contents.forEach(function(item){ %>
+    <li><%= item.description %> — <%= item.qty %> units</li>
+    <% }); %>
+    <% } %>
+  </ul>
+</body>
+</html>`;
 
-    cursorDot.style.left = `${posX}px`;
-    cursorDot.style.top = `${posY}px`;
-    
-    cursorOutline.style.left = `${posX}px`;
-    cursorOutline.style.top = `${posY}px`;
-  });
+  const dataJson = `{
+  "invoiceNumber": "INV-20418",
+  "buyerName": "Meridian Freight Co.",
+  "issueDate": "Jul 9, 2026",
+  "total": "$14,208.50",
+  "items": [
+    { "description": "Stainless steel fittings", "qty": 420, "unitPrice": "$18.40", "amount": "$7,728.00" },
+    { "description": "Industrial gaskets", "qty": 1200, "unitPrice": "$3.90", "amount": "$4,680.00" },
+    { "description": "Freight surcharge", "qty": 1, "unitPrice": "$1,800.50", "amount": "$1,800.50" }
+  ],
+  "shipmentId": "PL-88231",
+  "numCartons": 14,
+  "grossWeight": "860 kg",
+  "contents": [
+    { "description": "Stainless steel fittings", "qty": 420 },
+    { "description": "Industrial gaskets", "qty": 1200 }
+  ]
+}`;
 
-  document.querySelectorAll('a, button, .tab').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      cursorOutline.style.width = '48px';
-      cursorOutline.style.height = '48px';
-      cursorOutline.style.backgroundColor = 'rgba(79, 70, 229, 0.1)';
-    });
-    el.addEventListener('mouseleave', () => {
-      cursorOutline.style.width = '32px';
-      cursorOutline.style.height = '32px';
-      cursorOutline.style.backgroundColor = 'transparent';
-    });
-  });
+  // Read doc_type dynamically from localStorage to determine file visibility
+  let docType = 'commercial_invoice';
+  try {
+    const savedJson = localStorage.getItem('documirror_json');
+    if (savedJson) {
+      const parsed = JSON.parse(savedJson);
+      if (parsed.doc_type) {
+        docType = parsed.doc_type;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to parse doc_type from localStorage json:', e);
+  }
 
-  // State
-  let currentFile = 'template.ejs';
-  let files = {
-    'template.ejs': {
-      language: 'html',
-      content: localStorage.getItem('documirror_ejs') || '<!-- Upload a PDF to generate EJS -->\n<div class="document">\n  <h1><%= title || "Untitled" %></h1>\n</div>'
+  const files = {
+    invoice: { 
+      name: 'invoice-template.ejs', 
+      content: (docType !== 'packing_list' && localStorage.getItem('documirror_ejs')) || invoiceTemplate, 
+      lang: 'html' 
     },
-    'data.json': {
-      language: 'json',
-      content: localStorage.getItem('documirror_json') || '{\n  "title": "Example Document"\n}'
+    packing: { 
+      name: 'packing-list.ejs', 
+      content: (docType === 'packing_list' && localStorage.getItem('documirror_ejs')) || packingTemplate, 
+      lang: 'html' 
+    },
+    data:  { 
+      name: 'data.json', 
+      content: localStorage.getItem('documirror_json') || dataJson, 
+      lang: 'json' 
     }
   };
 
+  // Determine starting tab based on active document type
+  const defaultTab = docType === 'packing_list' ? 'packing' : 'invoice';
+  const state = { current: defaultTab, dirty: {} };
+
+  const paneFilename = document.getElementById('pane-filename');
+  const saveState = document.getElementById('save-state');
+  const previewFrame = document.getElementById('preview-frame');
+  const fileItems = document.querySelectorAll('.file-item');
+  const renderStatus = document.getElementById('render-status');
+  
   let editor;
 
-  // Fix Monaco Web Worker CORS issue for rich language features (HTML/JSON auto-complete)
+  // Render initial tabs visibility
+  const btnInvoice = document.querySelector('.file-item[data-file="invoice"]');
+  const btnPacking = document.querySelector('.file-item[data-file="packing"]');
+  if (docType === 'packing_list') {
+    btnInvoice.style.display = 'none';
+    btnPacking.style.display = 'flex';
+    btnPacking.classList.add('active');
+    btnInvoice.classList.remove('active');
+  } else {
+    btnPacking.style.display = 'none';
+    btnInvoice.style.display = 'flex';
+    btnInvoice.classList.add('active');
+    btnPacking.classList.remove('active');
+  }
+  paneFilename.textContent = files[state.current].name;
+
   window.MonacoEnvironment = {
     getWorkerUrl: function(workerId, label) {
       return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
@@ -349,113 +349,257 @@
     }
   };
 
-  // Initialize Monaco Editor
   require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
   require(['vs/editor/editor.main'], function() {
     editor = monaco.editor.create(document.getElementById('editor-container'), {
-      value: files[currentFile].content,
-      language: files[currentFile].language,
-      theme: 'vs-light',
+      value: files[state.current].content,
+      language: files[state.current].lang,
+      theme: 'vs-dark', // Matches the void aesthetic
       automaticLayout: true,
       minimap: { enabled: false },
       fontSize: 13,
-      fontFamily: "'Fira Code', 'Consolas', monospace",
+      fontFamily: "'JetBrains Mono', monospace",
       padding: { top: 16 },
-      autoClosingTags: true,
-      autoClosingBrackets: 'always',
-      formatOnType: true,
-      suggestOnTriggerCharacters: true
+      scrollBeyondLastLine: false
     });
 
-    editor.onDidChangeModelContent((event) => {
-      files[currentFile].content = editor.getValue();
-
-      // Auto-close tags logic for EJS/HTML
-      if (currentFile === 'template.ejs' && event.changes.length > 0) {
-        const change = event.changes[0];
-        if (change.text === '>') {
-          const position = editor.getPosition();
-          const lineContent = editor.getModel().getLineContent(position.lineNumber);
-          const textBefore = lineContent.substring(0, position.column - 1);
-          
-          // Match the opening tag just before the cursor
-          const match = textBefore.match(/<([a-zA-Z0-9\-]+)[^>]*>$/);
-          if (match) {
-            const tag = match[1].toLowerCase();
-            const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
-            
-            if (!voidElements.includes(tag)) {
-              const closingTag = `</${tag}>`;
-              
-              // Insert closing tag without pushing to undo stack as a separate action
-              editor.executeEdits("auto-close-tag", [{
-                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-                text: closingTag,
-                forceMoveMarkers: true
-              }]);
-              
-              // Move cursor back inside
-              editor.setPosition(position);
-            }
-          }
-        }
+    editor.onDidChangeModelContent(() => {
+      files[state.current].content = editor.getValue();
+      
+      if (!state.dirty[state.current]) {
+        state.dirty[state.current] = true;
+        saveState.textContent = 'Unsaved changes';
+        saveState.className = 'save-state dirty';
+        document.querySelector(`.file-item[data-file="${state.current}"]`).classList.add('unsaved');
       }
+
+      clearTimeout(window.renderTimeout);
+      window.renderTimeout = setTimeout(renderPreview, 300);
+    });
+
+    // Formatting action
+    document.getElementById('btn-format').addEventListener('click', () => {
+      editor.getAction('editor.action.formatDocument').run();
+    });
+
+    // Save action (ctrl+s / cmd+s)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function() {
+      state.dirty[state.current] = false;
+      saveState.textContent = 'Saved';
+      saveState.className = 'save-state saved';
+      document.querySelector(`.file-item[data-file="${state.current}"]`).classList.remove('unsaved');
+    });
+
+    // Show AI Prompt Bar on Ctrl+I
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI, function() {
+      const promptBar = document.getElementById('ai-prompt-bar');
+      const promptInput = document.getElementById('ai-prompt-input');
+      promptBar.style.display = 'flex';
+      promptInput.value = '';
+      promptInput.focus();
     });
 
     renderPreview();
   });
 
-  // Tabs logic
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', (e) => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      e.target.classList.add('active');
-      
-      currentFile = e.target.dataset.file;
-      monaco.editor.setModelLanguage(editor.getModel(), files[currentFile].language);
-      editor.setValue(files[currentFile].content);
-    });
-  });
+  // AI Prompt Bar Operations
+  const aiPromptBar = document.getElementById('ai-prompt-bar');
+  const aiPromptInput = document.getElementById('ai-prompt-input');
+  const btnAiSubmit = document.getElementById('btn-ai-submit');
+  const btnAiCancel = document.getElementById('btn-ai-cancel');
 
-  // Formatting
-  document.getElementById('btn-format').addEventListener('click', () => {
-    if (editor) {
-      editor.getAction('editor.action.formatDocument').run();
+  function closeAIBar() {
+    aiPromptBar.style.display = 'none';
+    if (editor) editor.focus();
+  }
+
+  btnAiCancel.addEventListener('click', closeAIBar);
+
+  aiPromptInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      submitAIEdit();
+    } else if (e.key === 'Escape') {
+      closeAIBar();
     }
   });
 
-  // Live Preview execution
-  document.getElementById('btn-run').addEventListener('click', () => {
-    renderPreview();
-  });
+  btnAiSubmit.addEventListener('click', submitAIEdit);
+
+  function submitAIEdit() {
+    const prompt = aiPromptInput.value.trim();
+    if (!prompt) return;
+
+    const selection = editor.getSelection();
+    const selectedText = editor.getModel().getValueInRange(selection);
+    
+    // If no text selected, we edit the whole document content
+    const textToEdit = selectedText || editor.getValue();
+    
+    btnAiSubmit.disabled = true;
+    btnAiSubmit.textContent = 'Editing...';
+
+    fetch('/api/edit_code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        code: textToEdit,
+        prompt: prompt,
+        file_type: files[state.current].lang
+      })
+    })
+    .then(resp => {
+      if (!resp.ok) throw new Error('AI edit failed');
+      return resp.json();
+    })
+    .then(data => {
+      if (data.edited_code) {
+        if (selectedText) {
+          const range = new monaco.Range(
+            selection.startLineNumber,
+            selection.startColumn,
+            selection.endLineNumber,
+            selection.endColumn
+          );
+          editor.executeEdits("ai-edit", [{
+            range: range,
+            text: data.edited_code,
+            forceMoveMarkers: true
+          }]);
+        } else {
+          editor.setValue(data.edited_code);
+        }
+        
+        // Mark document as dirty
+        if (!state.dirty[state.current]) {
+          state.dirty[state.current] = true;
+          saveState.textContent = 'Unsaved changes';
+          saveState.className = 'save-state dirty';
+          document.querySelector(`.file-item[data-file="${state.current}"]`).classList.add('unsaved');
+        }
+        renderPreview();
+      }
+      closeAIBar();
+    })
+    .catch(err => {
+      alert('Error: ' + err.message);
+    })
+    .finally(() => {
+      btnAiSubmit.disabled = false;
+      btnAiSubmit.textContent = 'Generate';
+    });
+  }
+
+  const defaultCommercialInvoice = {
+    exporter: "", importer: "", notify_party: "", invoice_no: "", invoice_date: "",
+    iec_no: "", gst_no: "", po_no: "", lc_no: "", lut_arn: "", ad_code: "", buyer_tax_id: "",
+    incoterms: "", port_of_loading: "", port_of_discharge: "", vessel_flight: "",
+    country_of_origin: "", pre_carriage: "", place_of_receipt: "", country_of_destination: "",
+    final_destination: "", terms_of_payment: "", terms_of_delivery: "", marks_and_nos: "",
+    pcs_count: "", cartons_count: "", carton_dimension: "", total_net_weight: "",
+    total_gross_weight: "", origin_declaration: "", invoice_declaration: "", currency: "",
+    item_table: [], total_qty: "", total_value: "", amount_in_words: "",
+    freight_charges: "", insurance_charges: "", bank_details: {
+      account_name: "", bank_name: "", account_no: "", swift_code: "", iban: "", branch: ""
+    },
+    layout: { font_family: "Arial, sans-serif", font_size_body: "8px", has_border: true }
+  };
+
+  const defaultPackingList = {
+    shipmentId: "", numCartons: "", grossWeight: "", contents: [],
+    shipper: "", consignee: "", notify_party: "", invoice_ref: "", bl_no: "",
+    packing_list_no: "", date: "", port_of_loading: "", port_of_discharge: "",
+    vessel_flight: "", country_of_origin: "", package_count: "", net_weight: "",
+    dimensions: "", cbm: "", marks_and_numbers: "", item_breakdown: [],
+    signatory: "", declaration: "",
+    layout: { font_family: "Arial, sans-serif", font_size_body: "8px", has_border: true }
+  };
 
   function renderPreview() {
-    const status = document.getElementById('render-status');
-    status.textContent = 'Rendering...';
-    status.style.color = 'var(--text-muted)';
-    
+    if (state.current === 'data') {
+      previewFrame.srcdoc = `<body style="font-family:monospace; font-size:12px; padding:20px; color:#5c6670; background:#fdfdfb;">Live preview rendered with data from data.json.<br><br>Switch to a template file to see the rendered output.</body>`;
+      renderStatus.textContent = 'Data configuration';
+      return;
+    }
+
     try {
-      const template = files['template.ejs'].content;
-      const dataStr = files['data.json'].content;
+      const template = files[state.current].content;
+      const dataStr = files['data'].content;
+      let rawData = {};
+      if (dataStr.trim() !== '') rawData = JSON.parse(dataStr);
       
-      let data = {};
-      if (dataStr.trim() !== '') {
-        data = JSON.parse(dataStr);
+      // Flatten the raw data if it is structured as { docs: ..., item: ... }
+      let flatRawData = {};
+      if (rawData.docs) {
+        flatRawData = Object.assign(flatRawData, rawData.docs);
       }
-      
+      if (rawData.item) {
+        flatRawData.item_table = rawData.item;
+        flatRawData.item_breakdown = rawData.item;
+      }
+      for (const k in rawData) {
+        if (k !== 'docs' && k !== 'item') {
+          flatRawData[k] = rawData[k];
+        }
+      }
+
+      // Merge with schema defaults depending on document type to prevent EJS ReferenceErrors
+      let data = {};
+      if (state.current === 'packing') {
+        data = Object.assign({}, defaultPackingList, flatRawData);
+        data.layout = Object.assign({}, defaultPackingList.layout, flatRawData.layout);
+      } else {
+        data = Object.assign({}, defaultCommercialInvoice, flatRawData);
+        data.bank_details = Object.assign({}, defaultCommercialInvoice.bank_details, flatRawData.bank_details);
+        data.layout = Object.assign({}, defaultCommercialInvoice.layout, flatRawData.layout);
+      }
+
       const html = ejs.render(template, data);
-      
-      const iframe = document.getElementById('preview-frame');
-      iframe.srcdoc = html;
-      
-      status.textContent = 'Rendered successfully';
-      status.style.color = 'var(--success)';
+      previewFrame.srcdoc = html;
+      renderStatus.textContent = 'rendered with sample data';
+      renderStatus.style.color = 'var(--mist)';
     } catch (err) {
       console.error(err);
-      status.textContent = 'Error: ' + err.message;
-      status.style.color = '#dc2626';
+      renderStatus.textContent = 'Render error: ' + err.message;
+      renderStatus.style.color = '#dc2626';
     }
   }
+
+  function loadFile(key) {
+    state.current = key;
+    const file = files[key];
+    paneFilename.textContent = file.name;
+    
+    if (editor) {
+      monaco.editor.setModelLanguage(editor.getModel(), file.lang);
+      editor.setValue(file.content);
+    }
+    
+    saveState.textContent = state.dirty[key] ? 'Unsaved changes' : 'Saved';
+    saveState.className = 'save-state ' + (state.dirty[key] ? 'dirty' : 'saved');
+    
+    fileItems.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.file === key);
+    });
+    
+    renderPreview();
+  }
+
+  fileItems.forEach(btn => {
+    btn.addEventListener('click', () => loadFile(btn.dataset.file));
+  });
+
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    const iframe = document.getElementById('preview-frame');
+    if (iframe.requestFullscreen) {
+      iframe.requestFullscreen();
+    } else if (iframe.webkitRequestFullscreen) {
+      iframe.webkitRequestFullscreen();
+    } else if (iframe.msRequestFullscreen) {
+      iframe.msRequestFullscreen();
+    }
+  });
 
 </script>
 </body>

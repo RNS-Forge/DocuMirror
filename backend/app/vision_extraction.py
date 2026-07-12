@@ -88,10 +88,13 @@ def _openrouter_chat(messages: list, model: str = OPENROUTER_VISION_MODEL) -> st
 _SCHEMA_HINTS = {
     "commercial_invoice": (
         "exporter, importer, notify_party, invoice_no, invoice_date, iec_no, gst_no, "
-        "po_no, lc_no, incoterms, port_of_loading, port_of_discharge, vessel_flight, "
-        "country_of_origin, currency, item_table (sr_no, description, hs_code, qty, "
-        "unit_price, amount), total_qty, total_value, amount_in_words, freight_charges, "
-        "insurance_charges, bank_details (bank_name, account_no, swift_code, iban, branch), "
+        "po_no, lc_no, lut_arn, lut_date, ad_code, buyer_tax_id, incoterms, port_of_loading, port_of_discharge, "
+        "vessel_flight, country_of_origin, pre_carriage, place_of_receipt, country_of_destination, "
+        "final_destination, terms_of_payment, terms_of_delivery, marks_and_nos, pcs_count, "
+        "cartons_count, carton_dimension, total_net_weight, total_gross_weight, origin_declaration, "
+        "invoice_declaration, currency, item_table (sr_no, description, hsn_code, style_name, style_no, "
+        "size, article_no, colour, qty, unit_price, amount), total_qty, total_value, amount_in_words, "
+        "freight_charges, insurance_charges, bank_details (account_name, bank_name, account_no, swift_code, iban, branch), "
         "signatory, declaration"
     ),
     "packing_list": (
@@ -126,6 +129,28 @@ def _build_extraction_prompt(doc_type: str, correction_notes: str = "") -> str:
         if correction_notes
         else ""
     )
+    commercial_invoice_rules = ""
+    if doc_type == "commercial_invoice":
+        commercial_invoice_rules = (
+            "\nCOMMERCIAL INVOICE SPECIFIC EXTRACTION RULES:\n"
+            "- CRITICAL (NO TRUNCATION): The fields 'exporter', 'importer' (buyer), and 'notify_party' represent full multi-line addresses. You MUST extract the ENTIRE multi-line text printed on the document for each, using '\\n' as the line break. Do NOT stop after the company name or first few lines.\n"
+            "  * Exporter Address: e.g. 'DIBELLA INDIA \\n B-309, ANISHA GRANGE \\n 29th CROSS, KAGGADASAPURA \\n BANGALORE - 560093'\n"
+            "  * Buyer Address: e.g. 'Clipper Target Sourcing Lda \\n NIF No: 516.029.231 \\n Lagos Prime Residence \\n / Rua Palmira Silva Lote 30i \\n 8600 - 785 Lagos,Portugal'\n"
+            "  * Notify Party: e.g. 'Textillogistik Unna - Tor F \\n Anlieferung, \\n Otto-Hahn-Str. 27 \\n 59423 Unna, \\n Germany'\n"
+            "- Extract 'lut_arn' and accompanying 'lut_date' (e.g. '30/03/2026') from the LUT ARN line. Do NOT omit 'DT 30/03/2026'.\n"
+            "- Pre-carriage by: Pre-carriage carrier (e.g. 'BY ROAD').\n"
+            "- Place of Receipt: (e.g. 'BANGALORE').\n"
+            "- Country of Origin: (e.g. 'INDIA').\n"
+            "- Country of Final Destination: (e.g. 'GERMANY'). Do not leave this field blank!\n"
+            "- Final Destination: (e.g. 'ROTTERDAM, Netherlands').\n"
+            "- Terms of Payment: Full terms text (e.g. '30% at order confirmation/ 20% upon shipment / 50% in 30 days upon receipt of goods at L shop warehouse').\n"
+            "- Terms of Delivery: (e.g. 'CIF Rotterdam -BY SEA').\n"
+            "- For each row in item_table, extract details like 'hsn_code', 'colour', 'style_name' (e.g. 'Long Handle Bag'), 'style_no' (e.g. 'XT 600 N'), 'size' (e.g. '38 x 42/2.5x70'), and 'article_no' (e.g. '1000286733') if present in the description columns.\n"
+            "- Extract 'marks_and_nos': This represents aggregate style/carton info on the left side of the table (e.g., 'Carton No\\nStyle No\\nColour\\nSize\\nTOTAL\\n909 CARTONS' or '909 CARTONS'). Do NOT extract 'ROTTERDAM' or the port of discharge here.\n"
+            "- Extract packing details: 'pcs_count' (e.g. '210720 PC\\'S'), 'cartons_count' (e.g. '909 NO\\'S'), 'carton_dimension', 'total_net_weight', 'total_gross_weight'.\n"
+            "- Extract 'origin_declaration' (e.g., 'The exporter of the products covered by this document declares that...') and 'invoice_declaration' ('We declare that this Invoice shows the actual price...').\n"
+        )
+
     return (
         f"You are an advanced document data extraction and HTML generation expert. "
         f"The image shows a '{doc_type.replace('_', ' ')}' document.\n\n"
@@ -138,13 +163,14 @@ def _build_extraction_prompt(doc_type: str, correction_notes: str = "") -> str:
         f"CRITICAL LAYOUT & TEMPLATE RULES:\n"
         f"- BORDERS: Replicate table borders precisely (use inline styles or classes for missing borders to match image).\n"
         f"- COMPLEX TABLES: Ensure complex tables use colspan/rowspan attributes where visually merged.\n"
-        f"- DYNAMIC LOGIC & GROUPBY: Use EJS conditionals (`<% if (...) { %>`) to only render loops, subtotals, or groupings IF the data exists. Structure your `fields` JSON to match the relationship of grouped items, and iterate over them in the EJS.\n"
+        f"- DYNAMIC LOGIC & GROUPBY: Use EJS conditionals (`<% if (...) {{ %>`) to only render loops, subtotals, or groupings IF the data exists. Structure your `fields` JSON to match the relationship of grouped items, and iterate over them in the EJS.\n"
         f"- CALCULATIONS: Extract and map all sub_total, tax, and total rows accurately in the EJS.\n"
         f"- Preserve exact formatting (dates, amounts, codes) as printed.\n"
         f"- For multiline text (addresses, declarations) use '\\n' as line separator.\n"
         f"- If a field is not visible, set it to null.\n"
         f"- item_table / item_breakdown must be a JSON array even if there is only one row.\n"
         f"- Return ONLY the JSON object. No markdown fences, no explanation."
+        f"{commercial_invoice_rules}"
         f"{correction_block}"
     )
 
@@ -244,10 +270,14 @@ def _parse_json_from_response(text: str) -> dict:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Last-ditch: find the first { … } block
-        match = re.search(r"\{[\s\S]+\}", text)
-        if match:
-            return json.loads(match.group())
+        # Use raw_decode to parse the first valid JSON object, ignoring trailing text.
+        start_idx = text.find('{')
+        if start_idx != -1:
+            try:
+                obj, _ = json.JSONDecoder().raw_decode(text[start_idx:])
+                return obj
+            except json.JSONDecodeError as exc:
+                raise ValueError(f"JSON raw_decode error: {exc}\nText snippet:\n{text[:500]}") from exc
         raise ValueError(f"No JSON object found in LLM response:\n{text[:500]}")
 
 

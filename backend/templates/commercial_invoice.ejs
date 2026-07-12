@@ -8,130 +8,106 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: <%= layout.font_family || 'Arial, sans-serif' %>;
-    font-size: <%= layout.font_size_body || '10px' %>;
+    font-size: <%= layout.font_size_body || '8px' %>;
     color: #000;
     background: #fff;
-    padding: 20px;
+    padding: 10px;
+    line-height: 1.2;
   }
   .page-wrapper {
-    width: 794px;
+    width: 794px; /* A4 width at 96 DPI */
     margin: 0 auto;
-    <%= layout.has_border ? 'border: 1px solid #000; padding: 16px;' : '' %>
+    border: 1px solid #000;
+    padding: 10px;
   }
+  
   /* ---- Document title ---- */
-  .doc-title {
+  .doc-title-bar {
     text-align: center;
-    font-size: 16px;
+    font-size: 10px;
     font-weight: bold;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #000;
-  }
-  /* ---- Two-column header grid ---- */
-  .header-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
+    letter-spacing: 1px;
     border: 1px solid #000;
-    margin-bottom: 8px;
+    border-bottom: none;
+    padding: 4px;
+    background: #fdfdfd;
   }
-  .header-cell {
-    padding: 6px 8px;
-    border-right: 1px solid #000;
-    border-bottom: 1px solid #000;
-  }
-  .header-cell:nth-child(even) { border-right: none; }
-  .header-cell:nth-last-child(-n+2) { border-bottom: none; }
-  .label {
-    font-weight: <%= layout.bold_labels !== false ? 'bold' : 'normal' %>;
-    font-size: 9px;
-    text-transform: uppercase;
-    color: #333;
-    margin-bottom: 2px;
-  }
-  .value { white-space: pre-line; }
-  /* ---- Party boxes ---- */
-  .parties-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    border: 1px solid #000;
-    border-top: none;
-    margin-bottom: 8px;
-  }
-  .party-cell {
-    padding: 8px;
-    border-right: 1px solid #000;
-  }
-  .party-cell:last-child { border-right: none; }
-  /* ---- Item table ---- */
-  table {
+
+  /* ---- Common Table Styles ---- */
+  table.info-table, table.item-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 8px;
+    margin-bottom: 0;
   }
-  th, td {
-    border: <%= layout.table_border_style || '1px solid #000' %>;
-    padding: 5px 6px;
+  
+  table.info-table td {
+    border: 1px solid #000;
+    padding: 4px 6px;
     vertical-align: top;
+    font-size: 7.5px;
   }
-  thead th {
-    background: #f0f0f0;
+
+  .label {
+    font-weight: bold;
+    font-size: 7px;
+    text-transform: uppercase;
+    color: #333;
+    display: block;
+    margin-bottom: 2px;
+  }
+  
+  .value {
+    white-space: pre-line;
+    word-break: break-word;
+  }
+
+  /* ---- Item table ---- */
+  table.item-table {
+    margin-top: -1px; /* collapse with info table border */
+    border: 1px solid #000;
+  }
+  
+  table.item-table th, table.item-table td {
+    border: 1px solid #000;
+    padding: 3px 4px;
+    vertical-align: top;
+    font-size: 7.5px;
+  }
+  
+  table.item-table thead th {
+    background: #fff;
     font-weight: bold;
     text-align: center;
-    font-size: 9px;
+    font-size: 7.5px;
     text-transform: uppercase;
   }
-  .col-sr    { width: 4%;  text-align: center; }
-  .col-desc  { width: 34%; text-align: left;   }
-  .col-hs    { width: 12%; text-align: center; }
-  .col-qty   { width: 12%; text-align: center; }
-  .col-up    { width: 16%; text-align: right;  }
-  .col-amt   { width: 16%; text-align: right;  }
-  /* ---- Totals block ---- */
-  .totals-wrap {
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 8px;
+
+  .col-marks  { width: 12%; text-align: left; }
+  .col-desc   { width: 34%; text-align: left; }
+  .col-style  { width: 11%; text-align: left; }
+  .col-styleno{ width: 7%;  text-align: center; }
+  .col-size   { width: 8%;  text-align: center; }
+  .col-artno  { width: 8%;  text-align: center; }
+  .col-hsn    { width: 7%;  text-align: center; }
+  .col-colour { width: 7%;  text-align: center; }
+  .col-qty    { width: 8%;  text-align: center; }
+  .col-price  { width: 8%;  text-align: right; }
+  .col-amount { width: 10%; text-align: right; }
+  
+  .packing-section {
+    padding: 6px 4px;
+    font-size: 7.5px;
   }
-  .totals-table {
-    width: 320px;
+  .packing-title {
+    font-weight: bold;
+    text-decoration: underline;
+    margin-bottom: 4px;
+    text-transform: uppercase;
   }
-  .totals-table td {
-    border: 1px solid #ccc;
-    padding: 4px 8px;
-  }
-  .totals-table .tot-label { font-weight: bold; text-align: left; }
-  .totals-table .tot-value { text-align: right; }
-  .totals-table .grand-total td { font-weight: bold; font-size: 11px; background: #f0f0f0; }
-  /* ---- Amount in words ---- */
-  .amount-words {
-    border: 1px solid #000;
-    padding: 6px 8px;
-    margin-bottom: 8px;
-    font-style: italic;
-  }
-  /* ---- Bank details ---- */
-  .bank-details {
-    border: 1px solid #000;
-    padding: 8px;
-    margin-bottom: 8px;
-  }
-  /* ---- Declaration + Signatory ---- */
-  .footer-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 8px;
-    margin-top: 8px;
-  }
-  .declaration { font-size: 8px; color: #444; white-space: pre-line; }
-  .signatory-box {
-    border-top: 1px solid #000;
-    padding-top: 6px;
-    text-align: center;
-    font-size: 9px;
+  .weight-block {
+    font-size: 7.5px;
+    text-align: left;
   }
 </style>
 </head>
@@ -139,186 +115,231 @@
 <div class="page-wrapper">
 
   <!-- Document Title -->
-  <div class="doc-title">Commercial Invoice</div>
+  <div class="doc-title-bar">Invoice</div>
 
-  <!-- Exporter / Importer -->
-  <div class="parties-grid">
-    <div class="party-cell">
-      <div class="label">Exporter / Seller</div>
-      <div class="value"><%= exporter || '' %></div>
-    </div>
-    <div class="party-cell">
-      <div class="label">Importer / Consignee</div>
-      <div class="value"><%= importer || '' %></div>
-    </div>
-  </div>
-
-  <% if (notify_party) { %>
-  <div class="parties-grid" style="margin-bottom:8px;">
-    <div class="party-cell" style="border-right:none; grid-column: 1 / -1;">
-      <div class="label">Notify Party</div>
-      <div class="value"><%= notify_party %></div>
-    </div>
-  </div>
-  <% } %>
-
-  <!-- Reference / Shipment details grid -->
-  <div class="header-grid">
-    <div class="header-cell">
-      <div class="label">Invoice No.</div>
-      <div class="value"><%= invoice_no || '' %></div>
-    </div>
-    <div class="header-cell">
-      <div class="label">Invoice Date</div>
-      <div class="value"><%= invoice_date || '' %></div>
-    </div>
-    <% if (iec_no) { %>
-    <div class="header-cell">
-      <div class="label">IEC No.</div>
-      <div class="value"><%= iec_no %></div>
-    </div>
-    <% } %>
-    <% if (gst_no) { %>
-    <div class="header-cell">
-      <div class="label">GST / VAT No.</div>
-      <div class="value"><%= gst_no %></div>
-    </div>
-    <% } %>
-    <% if (po_no) { %>
-    <div class="header-cell">
-      <div class="label">P.O. No.</div>
-      <div class="value"><%= po_no %></div>
-    </div>
-    <% } %>
-    <% if (lc_no) { %>
-    <div class="header-cell">
-      <div class="label">L/C No.</div>
-      <div class="value"><%= lc_no %></div>
-    </div>
-    <% } %>
-    <div class="header-cell">
-      <div class="label">Incoterms</div>
-      <div class="value"><%= incoterms || '' %></div>
-    </div>
-    <div class="header-cell">
-      <div class="label">Currency</div>
-      <div class="value"><%= currency || '' %></div>
-    </div>
-    <% if (port_of_loading) { %>
-    <div class="header-cell">
-      <div class="label">Port of Loading</div>
-      <div class="value"><%= port_of_loading %></div>
-    </div>
-    <% } %>
-    <% if (port_of_discharge) { %>
-    <div class="header-cell">
-      <div class="label">Port of Discharge</div>
-      <div class="value"><%= port_of_discharge %></div>
-    </div>
-    <% } %>
-    <% if (vessel_flight) { %>
-    <div class="header-cell">
-      <div class="label">Vessel / Flight</div>
-      <div class="value"><%= vessel_flight %></div>
-    </div>
-    <% } %>
-    <% if (country_of_origin) { %>
-    <div class="header-cell">
-      <div class="label">Country of Origin</div>
-      <div class="value"><%= country_of_origin %></div>
-    </div>
-    <% } %>
-  </div>
+  <!-- Header Info Grid Table -->
+  <table class="info-table">
+    <tr>
+      <!-- Row 1 -->
+      <td style="width: 40%;">
+        <span class="label">Exporter</span>
+        <div class="value" style="font-weight: bold;"><%= exporter || '' %></div>
+      </td>
+      <td style="width: 35%;">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+          <div>
+            <span class="label">Invoice No.</span>
+            <div class="value" style="font-weight: bold;"><%= invoice_no || '' %></div>
+          </div>
+          <div style="text-align: right; padding-right: 10px;">
+            <span class="label">Date</span>
+            <div class="value" style="font-weight: bold;"><%= invoice_date || '' %></div>
+          </div>
+        </div>
+        <div style="font-size: 7.5px; line-height: 1.2; margin-top: 4px;">
+          <% if (iec_no) { %><div><span class="label" style="display:inline;">IEC NO :</span> <span class="value" style="font-weight: bold;"><%= iec_no %></span></div><% } %>
+          <% if (po_no) { %><div><span class="label" style="display:inline;">Buyers Order No. :</span> <span class="value" style="font-weight: bold;"><%= po_no %></span></div><% } %>
+          <% if (lut_arn || gst_no || ad_code) { %>
+            <div style="margin-top: 2px; font-size: 7px; line-height: 1.1;">
+              <% if (lut_arn) { %><span class="label" style="display:inline;">LUT NO( ARN ) :</span> <span class="value"><%= lut_arn %></span><% } %>
+              <% if (gst_no) { %><span class="label" style="display:inline;"><%= lut_arn ? ' and GST :' : 'GST :' %></span> <span class="value"><%= gst_no %></span><% } %>
+              <% if (ad_code) { %><span class="label" style="display:inline;"> - AD Code:</span> <span class="value"><%= ad_code %></span><% } %>
+            </div>
+          <% } %>
+        </div>
+      </td>
+      <td rowspan="2" style="width: 25%;">
+        <span class="label">Bank Details</span>
+        <div class="value" style="font-size: 7px; line-height: 1.2;">
+          <% if (bank_details) { %>
+            <strong>ACCOUNT NAME :</strong> <%= bank_details.account_name || '' %><br>
+            <strong>BANK :</strong> <%= bank_details.bank_name || '' %><br>
+            <strong>ACCOUNT NO :</strong> <%= bank_details.account_no || '' %><br>
+            <strong>BRANCH:</strong> <%= bank_details.branch || '' %><br>
+            <strong>SWIFT :</strong> <%= bank_details.swift_code || '' %><br>
+          <% } %>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <!-- Row 2 -->
+      <td>
+        <span class="label">Buyer address</span>
+        <div class="value" style="font-weight: bold;">
+          <%= importer || '' %>
+          <% if (buyer_tax_id) { %><br>NIF No: <%= buyer_tax_id %><% } %>
+        </div>
+      </td>
+      <td>
+        <span class="label">NOTIFY PARTY/DELIVERY ADDRESS</span>
+        <div class="value"><%= notify_party || '' %></div>
+      </td>
+    </tr>
+    <tr>
+      <!-- Row 3 -->
+      <td>
+        <div style="display:flex; margin: -4px -6px;">
+          <div style="width: 50%; border-right: 1px solid #000; padding: 4px 6px;">
+            <span class="label">Pre-carriage by</span>
+            <div class="value"><%= pre_carriage || '' %></div>
+          </div>
+          <div style="width: 50%; padding: 4px 6px;">
+            <span class="label">Place of Receipt By Pre Carrier</span>
+            <div class="value"><%= place_of_receipt || '' %></div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span class="label">Country of Origin of Goods</span>
+        <div class="value" style="font-weight: bold; text-align: center;"><%= country_of_origin || '' %></div>
+      </td>
+      <td>
+        <span class="label">Country of Final Destination</span>
+        <div class="value" style="font-weight: bold; text-align: center;"><%= country_of_destination || '' %></div>
+      </td>
+    </tr>
+    <tr>
+      <!-- Row 4 -->
+      <td>
+        <div style="display:flex; margin: -4px -6px;">
+          <div style="width: 50%; border-right: 1px solid #000; padding: 4px 6px;">
+            <span class="label">Vessel/Flight No</span>
+            <div class="value"><%= vessel_flight || '' %></div>
+          </div>
+          <div style="width: 50%; padding: 4px 6px;">
+            <span class="label">Port of Loading</span>
+            <div class="value"><%= port_of_loading || '' %></div>
+          </div>
+        </div>
+      </td>
+      <td colspan="2">
+        <span class="label">Terms of Delivery</span>
+        <div class="value" style="font-weight: bold;"><%= terms_of_delivery || incoterms || '' %></div>
+      </td>
+    </tr>
+    <tr>
+      <!-- Row 5 -->
+      <td>
+        <div style="display:flex; margin: -4px -6px;">
+          <div style="width: 50%; border-right: 1px solid #000; padding: 4px 6px;">
+            <span class="label">Port of Discharge</span>
+            <div class="value"><%= port_of_discharge || '' %></div>
+          </div>
+          <div style="width: 50%; padding: 4px 6px;">
+            <span class="label">Final Destination</span>
+            <div class="value"><%= final_destination || '' %></div>
+          </div>
+        </div>
+      </td>
+      <td colspan="2">
+        <span class="label">Terms of Payment</span>
+        <div class="value" style="font-size: 7.5px; line-height: 1.1;"><%= terms_of_payment || '' %></div>
+      </td>
+    </tr>
+  </table>
 
   <!-- Item Table -->
-  <table>
+  <table class="item-table">
     <thead>
       <tr>
-        <th class="col-sr">Sr.</th>
-        <th class="col-desc">Description of Goods</th>
-        <th class="col-hs">HS Code</th>
-        <th class="col-qty">Quantity</th>
-        <th class="col-up">Unit Price</th>
-        <th class="col-amt">Amount</th>
+        <th class="col-marks">MARKS & NOS.</th>
+        <th class="col-desc">DESCRIPTION OF GOODS</th>
+        <th class="col-style">STYLE NAME</th>
+        <th class="col-styleno">STYLE NO</th>
+        <th class="col-size">SIZE</th>
+        <th class="col-artno">ARTICLE NO</th>
+        <th class="col-hsn">HSN CODE</th>
+        <th class="col-colour">COLOUR</th>
+        <th class="col-qty">Quantity in PCS</th>
+        <th class="col-price">CIF EURO PRICE</th>
+        <th class="col-amount">CIF EURO AMOUNT</th>
       </tr>
     </thead>
     <tbody>
       <% item_table.forEach(function(row, i) { %>
       <tr>
-        <td class="col-sr"><%= row.sr_no || (i + 1) %></td>
-        <td class="col-desc"><%= row.description || '' %></td>
-        <td class="col-hs"><%= row.hs_code || '' %></td>
-        <td class="col-qty"><%= row.qty || '' %></td>
-        <td class="col-up"><%= row.unit_price || '' %></td>
-        <td class="col-amt"><%= row.amount || '' %></td>
+        <% if (i === 0) { %>
+        <!-- Marks and Nos spans all items plus the packing details row -->
+        <td class="col-marks" rowspan="<%= item_table.length + 1 %>" style="font-weight: bold; border-bottom: 1px solid #000;">
+          <div style="white-space: pre-line; word-break: break-word;"><%= marks_and_nos || '' %></div>
+        </td>
+        <% } %>
+        
+        <td class="col-desc">
+          <% if (i === 0 && po_no) { %>
+            <div style="font-weight: bold; margin-bottom: 2px;">ORDER NO : <%= po_no %></div>
+          <% } %>
+          <%= row.description || '' %>
+        </td>
+        <td class="col-style"><%= row.style_name || '' %></td>
+        <td class="col-styleno"><%= row.style_no || '' %></td>
+        <td class="col-size"><%= row.size || '' %></td>
+        <td class="col-artno"><%= row.article_no || '' %></td>
+        <td class="col-hsn"><%= row.hsn_code || row.hs_code || '' %></td>
+        <td class="col-colour"><%= row.colour || '' %></td>
+        <td class="col-qty" style="text-align: center;"><%= row.qty || '' %></td>
+        <td class="col-price"><%= row.unit_price || '' %></td>
+        <td class="col-amount"><%= row.amount || '' %></td>
       </tr>
       <% }) %>
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="3" style="font-weight:bold; text-align:right;">Total</td>
-        <td class="col-qty" style="font-weight:bold;"><%= total_qty || '' %></td>
-        <td class="col-up"></td>
-        <td class="col-amt" style="font-weight:bold;"><%= total_value || '' %></td>
-      </tr>
-    </tfoot>
-  </table>
 
-  <!-- Totals block (freight, insurance if present) -->
-  <% if (freight_charges || insurance_charges) { %>
-  <div class="totals-wrap">
-    <table class="totals-table">
-      <% if (freight_charges) { %>
-      <tr>
-        <td class="tot-label">Freight</td>
-        <td class="tot-value"><%= freight_charges %></td>
+      <!-- Packing Details Row embedded inside table space -->
+      <tr style="height: 60px; vertical-align: top;">
+        <td class="packing-section" colspan="5">
+          <div class="packing-title">Packing Details</div>
+          <table style="width: 100%; border: none;">
+            <tr style="border: none;"><td style="border: none; padding: 1px 0;">NO'S OF PCS:</td><td style="border: none; padding: 1px 0; font-weight: bold;"><%= pcs_count || '' %></td></tr>
+            <tr style="border: none;"><td style="border: none; padding: 1px 0;">NO'S OF CARTONS:</td><td style="border: none; padding: 1px 0; font-weight: bold;"><%= cartons_count || '' %></td></tr>
+            <tr style="border: none;"><td style="border: none; padding: 1px 0;">CARTON DIMENSION:</td><td style="border: none; padding: 1px 0; font-weight: bold;"><%= carton_dimension || '' %></td></tr>
+          </table>
+        </td>
+        <td colspan="2" style="vertical-align: bottom; padding: 4px 6px;">
+          <div class="weight-block">
+            <div>TOTAL NET WEIGHT: <strong style="float: right;"><%= total_net_weight || '' %></strong></div>
+            <div style="margin-top: 3px;">TOTAL GROSS WEIGHT: <strong style="float: right;"><%= total_gross_weight || '' %></strong></div>
+          </div>
+        </td>
+        <td colspan="3" style="border-left: 1px solid #000;"></td>
       </tr>
-      <% } %>
-      <% if (insurance_charges) { %>
-      <tr>
-        <td class="tot-label">Insurance</td>
-        <td class="tot-value"><%= insurance_charges %></td>
+      
+      <!-- Totals Footer Row -->
+      <tr style="font-weight: bold; font-size: 8px; background: #fff;">
+        <td colspan="8" style="text-align: right; text-transform: uppercase; padding: 4px 6px;">TOTAL PCS</td>
+        <td style="text-align: center; padding: 4px;"><%= pcs_count || total_qty || '' %></td>
+        <td></td>
+        <td style="text-align: right; padding: 4px;"><%= total_value || '' %></td>
       </tr>
-      <% } %>
-      <tr class="grand-total">
-        <td class="tot-label">Grand Total</td>
-        <td class="tot-value"><%= total_value || '' %></td>
-      </tr>
-    </table>
-  </div>
-  <% } %>
+    </tbody>
+  </table>
 
   <!-- Amount in Words -->
   <% if (amount_in_words) { %>
-  <div class="amount-words">
-    <span class="label">Amount in Words: </span><%= amount_in_words %>
+  <div style="border: 1px solid #000; border-top: none; padding: 4px 6px; font-size: 7.5px; font-weight: bold;">
+    Amount in words : <span style="font-weight: normal; text-transform: uppercase;"><%= amount_in_words %></span>
   </div>
   <% } %>
 
-  <!-- Bank Details -->
-  <% if (bank_details && (bank_details.bank_name || bank_details.account_no)) { %>
-  <div class="bank-details">
-    <div class="label" style="margin-bottom:4px;">Bank Details</div>
-    <% if (bank_details.bank_name)   { %><div><strong>Bank:</strong> <%= bank_details.bank_name %></div><% } %>
-    <% if (bank_details.account_no)  { %><div><strong>A/C No.:</strong> <%= bank_details.account_no %></div><% } %>
-    <% if (bank_details.swift_code)  { %><div><strong>SWIFT:</strong> <%= bank_details.swift_code %></div><% } %>
-    <% if (bank_details.iban)        { %><div><strong>IBAN:</strong> <%= bank_details.iban %></div><% } %>
-    <% if (bank_details.branch)      { %><div><strong>Branch:</strong> <%= bank_details.branch %></div><% } %>
-  </div>
-  <% } %>
-
-  <!-- Declaration + Signatory -->
-  <div class="footer-grid">
-    <div>
-      <% if (declaration) { %>
-      <div class="declaration"><%= declaration %></div>
-      <% } %>
-    </div>
-    <div class="signatory-box">
-      <div style="height:40px;"></div>
-      <div><strong><%= signatory || 'Authorised Signatory' %></strong></div>
-    </div>
-  </div>
+  <!-- Declarations & Signature Box -->
+  <table style="width: 100%; border-collapse: collapse; margin-top: 6px; border: 1px solid #000;">
+    <% if (origin_declaration) { %>
+    <tr>
+      <td colspan="2" style="border-bottom: 1px solid #000; padding: 4px 6px; font-size: 7px; line-height: 1.2; font-style: italic;">
+        <%= origin_declaration %>
+      </td>
+    </tr>
+    <% } %>
+    <tr>
+      <td style="width: 70%; padding: 4px 6px; font-size: 7.5px; line-height: 1.25; vertical-align: top;">
+        <strong>Declaration :</strong><br>
+        <span style="font-style: italic;"><%= invoice_declaration || 'We declare that this Invoice shows the actual price of the goods described and that all particulars are true and correct.' %></span>
+      </td>
+      <td style="width: 30%; border-left: 1px solid #000; padding: 4px 6px; font-size: 7.5px; text-align: center; vertical-align: top;">
+        <div style="font-weight: bold; text-align: left;">For <%= exporter ? exporter.split('\n')[0] : 'Exporter' %></div>
+        <div style="height: 32px;"></div> <!-- Stamp/Signature space -->
+        <div style="font-weight: bold; border-top: 1px dashed #ccc; padding-top: 2px; font-size: 7px;">Authorised Signatory</div>
+      </td>
+    </tr>
+  </table>
 
 </div>
 </body>

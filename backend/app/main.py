@@ -26,6 +26,8 @@ from __future__ import annotations
 import logging
 import shutil
 import uuid
+import time
+import psutil
 from pathlib import Path
 from typing import Optional
 
@@ -58,6 +60,8 @@ app = FastAPI(
     description="PDF → EJS template + JSON extraction API",
     version="1.0.0",
 )
+
+ACTIVE_JOBS = {}
 
 # Serve the upload UI at the root
 if _STATIC_DIR.exists():
@@ -150,6 +154,13 @@ async def extract(
     output_dir: Optional[Path] = None
 
     try:
+        # 0. Track job
+        ACTIVE_JOBS[job_id] = {
+            "status": "running",
+            "filename": filename,
+            "started_at": time.time(),
+        }
+
         # 1. Save upload
         pdf_path = _save_upload(file, job_id)
 
@@ -182,6 +193,10 @@ async def extract(
             result.final_ssim,
             len(result.iterations),
         )
+        
+        # update job status
+        ACTIVE_JOBS[job_id]["status"] = "completed"
+        ACTIVE_JOBS[job_id]["completed_at"] = time.time()
 
         return JSONResponse(content=response_payload.model_dump(mode="json"))
 
@@ -266,6 +281,77 @@ async def chat_endpoint(
     reply = process_chat(message)
     return JSONResponse(content={"reply": reply})
 
+class EditCodeRequest(BaseModel):
+    code: str
+    prompt: str
+    file_type: str
+
+@app.post("/api/edit_code", summary="AI code editing assistant")
+async def edit_code_endpoint(req: EditCodeRequest) -> JSONResponse:
+    """
+    Edit a code snippet or full file based on the prompt using Groq.
+    """
+    try:
+        from app.vision_extraction import _groq_client
+        model = "llama-3.3-70b-specdec"
+        
+        system_instruction = (
+            "You are an expert developer. Your task is to modify the provided code according to the instructions. "
+            "Return ONLY the modified code. Do not wrap the output in markdown code blocks (e.g. ```html or ```), "
+            "do not include explanations, and do not write any greetings or warnings. Return the raw edited code directly."
+        )
+        
+        messages = [
+            {"role": "system", "content": system_instruction},
+            {"role": "user", "content": f"CODE:\n{req.code}\n\nINSTRUCTIONS:\n{req.prompt}"}
+        ]
+        
+        resp = _groq_client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.1
+        )
+        edited = resp.choices[0].message.content or ""
+        edited = edited.strip()
+        
+        # Strip accidental code blocks
+        if edited.startswith("```"):
+            lines = edited.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            edited = "\n".join(lines).strip()
+            
+        return JSONResponse(content={"edited_code": edited})
+    except Exception as e:
+        logger.error("AI code edit failed: %s", e)
+        # Fallback to config vision model
+        try:
+            from app.vision_extraction import _groq_client
+            from app.config import GROQ_VISION_MODEL
+            resp = _groq_client.chat.completions.create(
+                model=GROQ_VISION_MODEL,
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role": "user", "content": f"CODE:\n{req.code}\n\nINSTRUCTIONS:\n{req.prompt}"}
+                ],
+                temperature=0.1
+            )
+            edited = resp.choices[0].message.content or ""
+            edited = edited.strip()
+            if edited.startswith("```"):
+                lines = edited.splitlines()
+                if lines[0].startswith("```"):
+                    lines = lines[1:]
+                if lines and lines[-1].startswith("```"):
+                    lines = lines[:-1]
+                edited = "\n".join(lines).strip()
+            return JSONResponse(content={"edited_code": edited})
+        except Exception as err:
+            logger.error("Fallback AI edit failed: %s", err)
+            raise HTTPException(status_code=500, detail=str(err)) from err
+
 # ---------------------------------------------------------------------------
 # GET /health
 # ---------------------------------------------------------------------------
@@ -276,6 +362,43 @@ async def health() -> dict:
     return {
         "status": "ok",
         "render_service": "up" if render_ok else "down",
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /processes
+# ---------------------------------------------------------------------------
+
+@app.get("/processes", summary="Get system processes and active jobs")
+async def get_processes() -> dict:
+    """Return backend server process stats and current pipeline active jobs."""
+    try:
+        cpu_percent = psutil.cpu_percent(interval=0.1)
+        mem = psutil.virtual_memory()
+        process = psutil.Process()
+        app_mem = process.memory_info().rss / (1024 * 1024) # MB
+        
+        stats = {
+            "cpu_percent": cpu_percent,
+            "memory_percent": mem.percent,
+            "app_memory_mb": round(app_mem, 2),
+            "total_memory_mb": round(mem.total / (1024 * 1024), 2),
+            "available_memory_mb": round(mem.available / (1024 * 1024), 2)
+        }
+    except Exception as e:
+        stats = {"error": str(e)}
+
+    # cleanup old completed jobs (> 1 hr)
+    now = time.time()
+    for jid in list(ACTIVE_JOBS.keys()):
+        job = ACTIVE_JOBS[jid]
+        if job["status"] == "completed" and "completed_at" in job:
+            if now - job["completed_at"] > 3600:
+                del ACTIVE_JOBS[jid]
+                
+    return {
+        "system_stats": stats,
+        "active_jobs": ACTIVE_JOBS
     }
 
 
