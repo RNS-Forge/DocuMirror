@@ -3,604 +3,437 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Code editor — DocuMirror</title>
-<meta name="description" content="Edit the invoice and packing list templates and preview the rendered output live.">
-
+<title>Code Editor — DocuMirror</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- EJS for client-side rendering -->
-<script src="https://cdn.jsdelivr.net/npm/ejs@3.1.9/ejs.min.js"></script>
-<!-- Load Monaco Editor JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-
 <style>
   :root{
-    --void:        #0b0e13;
-    --void-2:      #141920;
-    --void-3:      #1a2029;
-    --void-line:   rgba(255,255,255,0.09);
-    --void-text:   #e7ebe8;
-    --void-mist:   #8b96a1;
-
-    --paper:       #eef1ee;
-    --ink:         #10131a;
-    --mist:        #5c6670;
-    --line:        rgba(16,19,26,0.12);
-
-    --signal:        #1f4fd8;
-    --signal-bright: #4f7dff;
-    --signal-tint:   #eaf0fe;
-    --signal-ink:    #163aa3;
-
-    --radius: 3px;
-    --font-display: 'JetBrains Mono', monospace;
-    --font-body: 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --void:#0b0e13; --void-2:#141920; --void-3:#1a2029;
+    --void-line:rgba(255,255,255,.09); --void-text:#e7ebe8; --void-mist:#8b96a1;
+    --paper:#eef1ee; --ink:#10131a; --mist:#5c6670; --line:rgba(16,19,26,.12);
+    --signal:#1f4fd8; --signal-bright:#4f7dff; --signal-tint:#eaf0fe; --signal-ink:#163aa3;
+    --success:#147a50; --success-tint:#e6f4ee; --error:#b3271e; --error-tint:#fbeae9;
+    --radius:3px;
+    --font-display:'JetBrains Mono',monospace; --font-body:'Inter',sans-serif; --font-mono:'JetBrains Mono',monospace;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--font-body);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  html, body{ height:100%; }
-  body{ font-family: var(--font-body); background: var(--paper); color: var(--ink); -webkit-font-smoothing:antialiased; display:flex; flex-direction:column; }
-  a{ color:inherit; text-decoration:none; }
-  button{ font-family:inherit; cursor:pointer; border:none; background:none; }
-  a:focus-visible, button:focus-visible{ outline: 2px solid var(--signal); outline-offset: 2px; }
+  /* Nav */
+  header.nav-header{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--line);flex-shrink:0;background:#fff}
+  .logo{font-family:var(--font-display);font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink);display:flex;align-items:center;gap:10px}
+  .logo-icon{width:20px;height:20px}
+  .logo-icon svg{width:100%;height:100%}
+  .nav-right{display:flex;align-items:center;gap:14px}
+  .nav-btn{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--mist);border:1px solid var(--line);border-radius:var(--radius);padding:7px 12px;transition:color .15s,border-color .15s,background-color .15s}
+  .nav-btn:hover{color:var(--ink);border-color:var(--ink)}
+  .nav-btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .nav-btn.primary:hover{background:var(--signal-ink);border-color:var(--signal-ink)}
 
-  @media (prefers-reduced-motion: reduce){
-    *, *::before, *::after{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
-  }
+  /* Shell */
+  .editor-shell{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
 
-  header.nav-header{
-    display:flex; justify-content:space-between; align-items:center; padding: 16px 24px;
-    border-bottom: 1px solid var(--line); flex-shrink:0; background:#fff;
-  }
-  .logo{ font-family: var(--font-display); font-size:15px; font-weight:800; letter-spacing:-0.01em; color: var(--ink); display:flex; align-items:center; gap:10px; }
-  .logo-icon{ width:20px; height:20px; }
-  .logo-icon svg{ width:100%; height:100%; }
-  .nav-right{ display:flex; align-items:center; gap:20px; }
-  .corp-link{ color: var(--mist); font-family: var(--font-mono); font-size:10.5px; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; }
-  .corp-link::before{ content:'· '; color: var(--signal); }
-  .nav-cta{
-    display:inline-flex; align-items:center; gap:8px; background: var(--ink); color:#fff; font-family: var(--font-mono);
-    font-size:11.5px; font-weight:600; padding:9px 14px; border-radius: var(--radius); transition: background-color .18s ease;
-  }
-  .nav-cta:hover{ background: var(--signal-ink); }
+  /* Code pane */
+  .code-pane{display:flex;flex-direction:column;background:var(--void);min-width:0;border-right:1px solid var(--void-line)}
+  .pane-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--void-line);font-family:var(--font-mono);font-size:11px;color:var(--void-mist);flex-shrink:0}
+  .pane-head .filename{color:var(--void-text)}
+  .pane-actions{display:flex;gap:10px;align-items:center}
+  .btn-sm{font-family:var(--font-mono);font-size:10px;color:var(--void-mist);border:1px solid var(--void-line);border-radius:3px;padding:3px 8px;text-transform:uppercase;transition:all .15s}
+  .btn-sm:hover{border-color:var(--signal-bright);color:var(--signal-bright)}
+  .save-state{font-size:10px;letter-spacing:.06em;text-transform:uppercase;transition:color .2s}
+  .save-state.dirty{color:var(--signal-bright)}
+  .save-state.saved{color:var(--void-mist)}
+  .code-wrap{flex:1;display:flex;overflow:hidden;position:relative}
+  #editor-container{flex:1;width:100%;height:100%;background:var(--void)}
 
-  .editor-shell{ flex:1; display:grid; grid-template-columns: 220px 1fr 1fr; min-height:0; }
+  /* AI prompt bar */
+  #ai-bar{display:none;position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:var(--void-2);border:1px solid var(--signal-bright);border-radius:4px;padding:8px 12px;align-items:center;gap:10px;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.6);width:92%;max-width:520px}
+  #ai-bar label{font-family:var(--font-mono);font-size:10px;color:var(--signal-bright);font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+  #ai-input{flex:1;background:transparent;border:none;color:var(--void-text);font-family:var(--font-body);font-size:12.5px;outline:none}
+  #ai-input::placeholder{color:var(--void-mist)}
+  .ai-submit{background:var(--signal-bright);color:#fff;font-family:var(--font-mono);font-size:10px;padding:5px 10px;border-radius:2px;font-weight:700;text-transform:uppercase;transition:background .12s;white-space:nowrap}
+  .ai-submit:hover{background:var(--signal-ink)}
+  .ai-submit:disabled{opacity:.5;cursor:not-allowed}
+  .ai-cancel{color:var(--void-mist);font-family:var(--font-mono);font-size:10px;font-weight:700;text-transform:uppercase;padding:5px}
 
-  /* ---------- File tree ---------- */
-  .file-tree{ background:#fff; border-right: 1px solid var(--line); padding: 18px 12px; overflow-y:auto; }
-  .file-tree .tree-label{ font-family: var(--font-mono); font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color: var(--mist); padding: 6px 10px 10px; }
-  .file-item{
-    display:flex; align-items:center; gap:9px; width:100%; text-align:left; padding: 9px 10px; border-radius: 4px;
-    font-family: var(--font-mono); font-size:12px; color: var(--ink); transition: background-color .12s ease;
-  }
-  .file-item:hover{ background: var(--paper); }
-  .file-item.active{ background: var(--signal-tint); color: var(--signal-ink); font-weight:600; }
-  .file-item svg{ width:14px; height:14px; flex-shrink:0; stroke: currentColor; fill:none; stroke-width:1.6; opacity:.75; }
-  .file-item .dot-unsaved{ width:6px; height:6px; border-radius:50%; background: var(--signal); margin-left:auto; display:none; flex-shrink:0; }
-  .file-item.unsaved .dot-unsaved{ display:block; }
+  /* Refine bar */
+  #refine-bar{display:none;flex-direction:column;gap:8px;background:var(--void-2);border-top:1px solid var(--void-line);padding:12px 16px;flex-shrink:0}
+  #refine-bar.visible{display:flex}
+  .refine-row{display:flex;gap:8px;align-items:center}
+  #refine-input{flex:1;background:var(--void-3);border:1px solid var(--void-line);color:var(--void-text);font-family:var(--font-body);font-size:12.5px;padding:8px 12px;border-radius:3px;outline:none;transition:border-color .15s}
+  #refine-input:focus{border-color:var(--signal-bright)}
+  #refine-input::placeholder{color:var(--void-mist)}
+  .refine-send{background:var(--signal-bright);color:#fff;font-family:var(--font-mono);font-size:11px;padding:8px 14px;border-radius:3px;font-weight:700;transition:background .12s;white-space:nowrap}
+  .refine-send:hover{background:var(--signal-ink)}
+  .refine-send:disabled{opacity:.5;cursor:not-allowed}
+  .refine-close{color:var(--void-mist);font-family:var(--font-mono);font-size:10px;padding:4px 6px;text-transform:uppercase}
+  .refine-status{font-family:var(--font-mono);font-size:10.5px;color:var(--void-mist)}
+  .refine-status.thinking{color:var(--signal-bright);animation:pulse .9s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* ---------- Code pane ---------- */
-  .code-pane{ display:flex; flex-direction:column; background: var(--void); min-width:0; border-right: 1px solid var(--void-line); }
-  .pane-head{
-    display:flex; align-items:center; justify-content:space-between; padding: 10px 16px; border-bottom: 1px solid var(--void-line);
-    font-family: var(--font-mono); font-size:11px; color: var(--void-mist); flex-shrink:0;
-  }
-  .pane-head .filename{ color: var(--void-text); }
-  .pane-head .save-state{ font-size:10px; letter-spacing:0.06em; text-transform:uppercase; transition: color .2s; }
-  .pane-head .save-state.dirty{ color: var(--signal-bright); }
-  .pane-head .save-state.saved{ color: var(--void-mist); }
-  
-  .btn-format { font-family: var(--font-mono); font-size:10px; color: var(--void-mist); border: 1px solid var(--void-line); border-radius: 3px; padding: 3px 8px; text-transform: uppercase; transition: all 0.2s; }
-  .btn-format:hover { border-color: var(--signal-bright); color: var(--signal-bright); }
+  /* Preview pane */
+  .preview-pane{display:flex;flex-direction:column;background:var(--paper);min-width:0}
+  .pane-head.light{background:#fff;border-bottom:1px solid var(--line);color:var(--mist)}
+  .pane-head.light .filename{color:var(--ink)}
+  #preview-frame{flex:1;border:none;background:#fff;width:100%;height:100%}
 
-  .code-wrap{ flex:1; display:flex; overflow:hidden; position:relative; }
-  #editor-container { flex: 1; width: 100%; height: 100%; background: var(--void); }
+  /* Footer */
+  footer{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--void);color:var(--void-mist);font-family:var(--font-mono);font-size:10.5px;flex-shrink:0}
+  footer a{color:var(--void-mist);transition:color .15s}
+  footer a:hover{color:var(--signal-bright)}
+  .footer-links{display:flex;gap:18px}
 
-  /* ---------- Preview pane ---------- */
-  .preview-pane{ display:flex; flex-direction:column; background: var(--paper); min-width:0; }
-  .pane-head.light{ background:#fff; border-bottom:1px solid var(--line); color: var(--mist); }
-  .pane-head.light .filename{ color: var(--ink); }
-  #preview-frame{ flex:1; border:none; background:#fff; width:100%; height:100%; }
+  /* Toast */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--ink);color:#fff;font-family:var(--font-mono);font-size:11.5px;padding:10px 18px;border-radius:var(--radius);opacity:0;transition:opacity .2s,transform .2s;z-index:999;pointer-events:none;white-space:nowrap}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  footer{
-    display:flex; align-items:center; justify-content:space-between; padding: 10px 20px; background: var(--void);
-    color: var(--void-mist); font-family: var(--font-mono); font-size:10.5px; flex-shrink:0;
-  }
-  footer a{ color: var(--void-mist); transition: color .15s ease; }
-  footer a:hover{ color: var(--signal-bright); }
-  .footer-links{ display:flex; gap:18px; }
-
-  @media (max-width: 960px){
-    .editor-shell{ grid-template-columns: 160px 1fr; }
-    .preview-pane{ display:none; }
-  }
-  @media (max-width: 640px){
-    .editor-shell{ grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-    .file-tree{ display:flex; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line); padding: 10px 8px; gap:4px; }
-    .file-tree .tree-label{ display:none; }
-    .file-item{ white-space:nowrap; }
-  }
+  @media(max-width:768px){.editor-shell{grid-template-columns:1fr}.preview-pane{display:none}}
 </style>
 </head>
 <body>
 
-  <header class="nav-header">
-    <a href="index.html" class="logo">
-      <span class="logo-icon" aria-hidden="true">
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
-          <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
-          <path d="M26,0 L32,6 H26 Z" fill="#163aa3"/>
-          <rect x="15.25" y="4" width="1.5" height="24" rx="0.75" fill="#f6f7f9" opacity="0.9"/>
-        </svg>
-      </span>
-      DocuMirror
-    </a>
-    <div class="nav-right">
-      <span class="corp-link">RNS Solutions</span>
-      <a href="#" onclick="window.history.back(); return false;" class="nav-cta">Back</a>
-    </div>
-  </header>
+<header class="nav-header">
+  <a href="/" class="logo">
+    <span class="logo-icon" aria-hidden="true">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6,0 H16 V32 H6 A6,6 0 0 1 0,26 V6 A6,6 0 0 1 6,0 Z" fill="#12151c"/>
+        <path d="M16,0 H26 L32,6 V26 A6,6 0 0 1 26,32 H16 Z" fill="#1f4fd8"/>
+        <path d="M26,0 L32,6 H26 Z" fill="#163aa3"/>
+        <rect x="15.25" y="4" width="1.5" height="24" rx=".75" fill="#f6f7f9" opacity=".9"/>
+      </svg>
+    </span>
+    DocuMirror
+  </a>
+  <div class="nav-right">
+    <button class="nav-btn" id="btn-copy-all" title="Copy all HTML">Copy HTML</button>
+    <button class="nav-btn" id="btn-download" title="Download HTML file">Download</button>
+    <button class="nav-btn" id="btn-refine-toggle" title="Open AI refinement bar">AI Refine</button>
+    <a href="/upload" class="nav-btn primary">← Upload new</a>
+  </div>
+</header>
 
-  <div class="editor-shell">
-    <div class="file-tree">
-      <div class="tree-label">Templates</div>
-      <button class="file-item active" data-file="invoice">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-        invoice-template.ejs
-        <span class="dot-unsaved"></span>
-      </button>
-      <button class="file-item" data-file="packing">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
-        packing-list.ejs
-        <span class="dot-unsaved"></span>
-      </button>
-      <button class="file-item" data-file="data">
-        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9h16M9 9v11"/></svg>
-        data.json
-        <span class="dot-unsaved"></span>
-      </button>
-    </div>
-
-    <div class="code-pane">
-      <div class="pane-head">
-        <span class="filename" id="pane-filename">invoice-template.ejs</span>
-        <div style="display:flex; gap:12px; align-items:center;">
-          <button id="btn-format" class="btn-format">Format</button>
-          <span class="save-state saved" id="save-state">Saved</span>
-        </div>
-      </div>
-      <div class="code-wrap" style="position: relative;">
-        <div id="editor-container"></div>
-        
-        <!-- Floating AI Prompt Bar -->
-        <div id="ai-prompt-bar" style="display:none; position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:var(--void-2); border:1px solid var(--signal-bright); border-radius:4px; padding:8px 12px; align-items:center; gap:10px; z-index:1000; box-shadow:0 10px 30px rgba(0,0,0,0.6); width:90%; max-width:500px;">
-          <span style="font-family:var(--font-mono); font-size:10px; color:var(--signal-bright); font-weight:bold; letter-spacing:0.05em; text-transform:uppercase;">AI Edit:</span>
-          <input type="text" id="ai-prompt-input" placeholder="What do you want to change in the code?" style="flex:1; background:transparent; border:none; color:var(--void-text); font-family:var(--font-body); font-size:12px; outline:none;" />
-          <button id="btn-ai-submit" style="background:var(--signal-bright); color:#fff; font-family:var(--font-mono); font-size:10px; padding:5px 10px; border-radius:2px; font-weight:bold; text-transform:uppercase; transition: background .12s;">Generate</button>
-          <button id="btn-ai-cancel" style="color:var(--void-mist); font-family:var(--font-mono); font-size:10px; font-weight:bold; text-transform:uppercase; margin-left:4px;">Cancel</button>
-        </div>
+<div class="editor-shell">
+  <!-- Code pane -->
+  <div class="code-pane">
+    <div class="pane-head">
+      <span class="filename">document.html</span>
+      <div class="pane-actions">
+        <button class="btn-sm" id="btn-format">Format</button>
+        <span class="save-state saved" id="save-state">Saved</span>
       </div>
     </div>
-
-    <div class="preview-pane">
-      <div class="pane-head light" style="display: flex; justify-content: space-between; align-items: center;">
-        <span class="filename">Live preview</span>
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span id="render-status">rendered with sample data</span>
-          <button id="btn-fullscreen" style="font-family: var(--font-mono); font-size: 10px; color: var(--mist); border: 1px solid var(--line); border-radius: 3px; padding: 2px 6px; text-transform: uppercase; transition: all 0.2s;">Fullscreen</button>
-        </div>
+    <div class="code-wrap">
+      <div id="editor-container"></div>
+      <!-- Inline AI edit bar (Ctrl+I) -->
+      <div id="ai-bar">
+        <label>AI Edit:</label>
+        <input type="text" id="ai-input" placeholder="Describe the change you want…" autocomplete="off"/>
+        <button class="ai-submit" id="ai-submit">Apply</button>
+        <button class="ai-cancel" id="ai-cancel">✕</button>
       </div>
-      <iframe id="preview-frame" title="Template preview" allowfullscreen="true"></iframe>
+    </div>
+    <!-- AI refine bar (bottom) -->
+    <div id="refine-bar">
+      <div class="refine-row">
+        <input type="text" id="refine-input" placeholder="e.g. Change the currency to EUR, add a discount column, translate labels to German…" autocomplete="off"/>
+        <button class="refine-send" id="refine-send">Refine with AI</button>
+        <button class="refine-close" id="refine-close">✕</button>
+      </div>
+      <span class="refine-status" id="refine-status"></span>
     </div>
   </div>
 
-  <footer>
-    <span>© 2026 RNS Solutions — DocuMirror</span>
-    <div class="footer-links">
-      <a href="upload.html">Extractor</a>
-      <a href="agent.html">Agent Pipeline</a>
-      <a href="codeeditor.html">Code editor</a>
+  <!-- Preview pane -->
+  <div class="preview-pane">
+    <div class="pane-head light">
+      <span class="filename">Live preview</span>
+      <div class="pane-actions" style="display:flex;gap:10px;align-items:center">
+        <span id="render-status" style="font-family:var(--font-mono);font-size:10px;color:var(--mist)">ready</span>
+        <button class="nav-btn" id="btn-fullscreen" style="padding:4px 8px;font-size:10px">Fullscreen</button>
+      </div>
     </div>
-  </footer>
+    <iframe id="preview-frame" title="Document preview" sandbox="allow-same-origin allow-scripts"></iframe>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 RNS Solutions — DocuMirror</span>
+  <div class="footer-links">
+    <a href="/upload">Digitizer</a>
+    <a href="/editor">Code editor</a>
+  </div>
+</footer>
+
+<div id="toast"></div>
 
 <script>
-  const invoiceTemplate = `<!DOCTYPE html>
-<html>
+/* ============ Load HTML from localStorage ============ */
+const STORAGE_KEY = 'documirror_html';
+const FALLBACK_HTML = `<!DOCTYPE html>
+<html lang="en">
 <head>
-<style>
-  body{ font-family: Arial, sans-serif; padding: 32px; color:#10131a; }
-  h1{ font-size: 18px; margin-bottom: 4px; }
-  .muted{ color:#5c6670; font-size: 12px; margin-bottom: 24px; }
-  table{ width:100%; border-collapse: collapse; margin-top: 16px; }
-  th, td{ text-align:left; padding: 8px 10px; border-bottom: 1px solid #dfe3e8; font-size: 13px; }
-  th{ font-size: 11px; text-transform:uppercase; color:#5c6670; }
-  .total-row td{ font-weight:700; border-bottom:none; padding-top:14px; }
-</style>
+  <meta charset="UTF-8"/>
+  <title>Invoice</title>
+  <style>
+    @page { size: A4 portrait; margin: 12mm; }
+    body { font-family: Arial, sans-serif; font-size: 10px; color: #000; }
+    table { width: 100%; border-collapse: collapse; }
+    td, th { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+    th { background: #f3f4f6; font-weight: bold; text-align: center; }
+    .title { text-align: center; font-size: 14px; font-weight: bold; padding: 8px; background: #f3f4f6; }
+  </style>
 </head>
 <body>
-  <h1>Commercial Invoice #<%= invoiceNumber %></h1>
-  <div class="muted">Issued to <%= buyerName %> · <%= issueDate %></div>
   <table>
-    <tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr>
-    <% if (typeof items !== 'undefined') { %>
-    <% items.forEach(function(item){ %>
-    <tr><td><%= item.description %></td><td><%= item.qty %></td><td><%= item.unitPrice %></td><td><%= item.amount %></td></tr>
-    <% }); %>
-    <% } %>
-    <tr class="total-row"><td colspan="3">Total</td><td><%= total %></td></tr>
+    <tr><td colspan="4" class="title">COMMERCIAL INVOICE</td></tr>
+    <tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr>
+    <tr><td>Sample item</td><td>1</td><td>$100.00</td><td>$100.00</td></tr>
+    <tr><td colspan="3" style="text-align:right;font-weight:bold">Total</td><td>$100.00</td></tr>
   </table>
 </body>
 </html>`;
 
-  const packingTemplate = `<!DOCTYPE html>
-<html>
-<head>
-<style>
-  body{ font-family: Arial, sans-serif; padding: 32px; color:#10131a; }
-  h1{ font-size: 18px; margin-bottom: 4px; }
-  .muted{ color:#5c6670; font-size: 12px; margin-bottom: 24px; }
-  ul{ padding-left: 18px; }
-  li{ font-size: 13px; margin-bottom: 6px; }
-</style>
-</head>
-<body>
-  <h1>Packing List #<%= shipmentId %></h1>
-  <div class="muted"><%= numCartons %> cartons · Gross weight <%= grossWeight %></div>
-  <ul>
-    <% if (typeof contents !== 'undefined') { %>
-    <% contents.forEach(function(item){ %>
-    <li><%= item.description %> — <%= item.qty %> units</li>
-    <% }); %>
-    <% } %>
-  </ul>
-</body>
-</html>`;
+let currentHtml = localStorage.getItem(STORAGE_KEY) || FALLBACK_HTML;
+let isDirty = false;
+let editor;
 
-  const dataJson = `{
-  "invoiceNumber": "INV-20418",
-  "buyerName": "Meridian Freight Co.",
-  "issueDate": "Jul 9, 2026",
-  "total": "$14,208.50",
-  "items": [
-    { "description": "Stainless steel fittings", "qty": 420, "unitPrice": "$18.40", "amount": "$7,728.00" },
-    { "description": "Industrial gaskets", "qty": 1200, "unitPrice": "$3.90", "amount": "$4,680.00" },
-    { "description": "Freight surcharge", "qty": 1, "unitPrice": "$1,800.50", "amount": "$1,800.50" }
-  ],
-  "shipmentId": "PL-88231",
-  "numCartons": 14,
-  "grossWeight": "860 kg",
-  "contents": [
-    { "description": "Stainless steel fittings", "qty": 420 },
-    { "description": "Industrial gaskets", "qty": 1200 }
-  ]
-}`;
+/* ============ DOM refs ============ */
+const saveStateEl    = document.getElementById('save-state');
+const renderStatus   = document.getElementById('render-status');
+const previewFrame   = document.getElementById('preview-frame');
+const aiBar          = document.getElementById('ai-bar');
+const aiInput        = document.getElementById('ai-input');
+const aiSubmit       = document.getElementById('ai-submit');
+const aiCancel       = document.getElementById('ai-cancel');
+const refineBar      = document.getElementById('refine-bar');
+const refineInput    = document.getElementById('refine-input');
+const refineSend     = document.getElementById('refine-send');
+const refineClose    = document.getElementById('refine-close');
+const refineStatus   = document.getElementById('refine-status');
+const toastEl        = document.getElementById('toast');
 
-  // Read doc_type dynamically from localStorage to determine file visibility
-  let docType = 'commercial_invoice';
+/* ============ Monaco setup ============ */
+window.MonacoEnvironment = {
+  getWorkerUrl: function() {
+    return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+      self.MonacoEnvironment={baseUrl:'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/'};
+      importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
+    `)}`;
+  }
+};
+
+require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+require(['vs/editor/editor.main'], function () {
+  editor = monaco.editor.create(document.getElementById('editor-container'), {
+    value: currentHtml,
+    language: 'html',
+    theme: 'vs-dark',
+    automaticLayout: true,
+    minimap: { enabled: false },
+    fontSize: 13,
+    fontFamily: "'JetBrains Mono', monospace",
+    padding: { top: 16 },
+    scrollBeyondLastLine: false,
+    wordWrap: 'on',
+  });
+
+  editor.onDidChangeModelContent(() => {
+    currentHtml = editor.getValue();
+    localStorage.setItem(STORAGE_KEY, currentHtml);
+    markDirty();
+    clearTimeout(window._renderTimer);
+    window._renderTimer = setTimeout(renderPreview, 350);
+  });
+
+  /* Format */
+  document.getElementById('btn-format').addEventListener('click', () => {
+    editor.getAction('editor.action.formatDocument').run();
+  });
+
+  /* Ctrl+S → mark saved */
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    localStorage.setItem(STORAGE_KEY, editor.getValue());
+    markSaved();
+    showToast('Saved to browser storage');
+  });
+
+  /* Ctrl+I → open inline AI bar */
+  editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI, () => {
+    aiBar.style.display = 'flex';
+    aiInput.value = '';
+    aiInput.focus();
+  });
+
+  renderPreview();
+});
+</script>
+
+<script>
+/* ============ Preview renderer ============ */
+function renderPreview() {
   try {
-    const savedJson = localStorage.getItem('documirror_json');
-    if (savedJson) {
-      const parsed = JSON.parse(savedJson);
-      if (parsed.doc_type) {
-        docType = parsed.doc_type;
-      }
-    }
+    previewFrame.srcdoc = editor ? editor.getValue() : currentHtml;
+    renderStatus.textContent = 'rendered';
+    renderStatus.style.color = 'var(--mist)';
   } catch (e) {
-    console.error('Failed to parse doc_type from localStorage json:', e);
+    renderStatus.textContent = 'render error';
+    renderStatus.style.color = '#dc2626';
   }
+}
 
-  const files = {
-    invoice: { 
-      name: 'invoice-template.ejs', 
-      content: (docType !== 'packing_list' && localStorage.getItem('documirror_ejs')) || invoiceTemplate, 
-      lang: 'html' 
-    },
-    packing: { 
-      name: 'packing-list.ejs', 
-      content: (docType === 'packing_list' && localStorage.getItem('documirror_ejs')) || packingTemplate, 
-      lang: 'html' 
-    },
-    data:  { 
-      name: 'data.json', 
-      content: localStorage.getItem('documirror_json') || dataJson, 
-      lang: 'json' 
-    }
-  };
-
-  // Determine starting tab based on active document type
-  const defaultTab = docType === 'packing_list' ? 'packing' : 'invoice';
-  const state = { current: defaultTab, dirty: {} };
-
-  const paneFilename = document.getElementById('pane-filename');
-  const saveState = document.getElementById('save-state');
-  const previewFrame = document.getElementById('preview-frame');
-  const fileItems = document.querySelectorAll('.file-item');
-  const renderStatus = document.getElementById('render-status');
-  
-  let editor;
-
-  // Render initial tabs visibility
-  const btnInvoice = document.querySelector('.file-item[data-file="invoice"]');
-  const btnPacking = document.querySelector('.file-item[data-file="packing"]');
-  if (docType === 'packing_list') {
-    btnInvoice.style.display = 'none';
-    btnPacking.style.display = 'flex';
-    btnPacking.classList.add('active');
-    btnInvoice.classList.remove('active');
-  } else {
-    btnPacking.style.display = 'none';
-    btnInvoice.style.display = 'flex';
-    btnInvoice.classList.add('active');
-    btnPacking.classList.remove('active');
+/* ============ Dirty / saved state ============ */
+function markDirty() {
+  if (!isDirty) {
+    isDirty = true;
+    saveStateEl.textContent = 'Unsaved';
+    saveStateEl.className = 'save-state dirty';
   }
-  paneFilename.textContent = files[state.current].name;
+}
+function markSaved() {
+  isDirty = false;
+  saveStateEl.textContent = 'Saved';
+  saveStateEl.className = 'save-state saved';
+}
 
-  window.MonacoEnvironment = {
-    getWorkerUrl: function(workerId, label) {
-      return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
-        self.MonacoEnvironment = {
-          baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/'
-        };
-        importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
-      `)}`;
-    }
-  };
+/* ============ Toolbar buttons ============ */
+document.getElementById('btn-copy-all').addEventListener('click', () => {
+  const html = editor ? editor.getValue() : currentHtml;
+  navigator.clipboard.writeText(html).then(() => showToast('HTML copied to clipboard'));
+});
 
-  require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
-  require(['vs/editor/editor.main'], function() {
-    editor = monaco.editor.create(document.getElementById('editor-container'), {
-      value: files[state.current].content,
-      language: files[state.current].lang,
-      theme: 'vs-dark', // Matches the void aesthetic
-      automaticLayout: true,
-      minimap: { enabled: false },
-      fontSize: 13,
-      fontFamily: "'JetBrains Mono', monospace",
-      padding: { top: 16 },
-      scrollBeyondLastLine: false
-    });
+document.getElementById('btn-download').addEventListener('click', () => {
+  const html = editor ? editor.getValue() : currentHtml;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  a.download = 'document.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
 
-    editor.onDidChangeModelContent(() => {
-      files[state.current].content = editor.getValue();
-      
-      if (!state.dirty[state.current]) {
-        state.dirty[state.current] = true;
-        saveState.textContent = 'Unsaved changes';
-        saveState.className = 'save-state dirty';
-        document.querySelector(`.file-item[data-file="${state.current}"]`).classList.add('unsaved');
-      }
+document.getElementById('btn-fullscreen').addEventListener('click', () => {
+  const f = document.getElementById('preview-frame');
+  (f.requestFullscreen || f.webkitRequestFullscreen || f.msRequestFullscreen).call(f);
+});
 
-      clearTimeout(window.renderTimeout);
-      window.renderTimeout = setTimeout(renderPreview, 300);
-    });
+document.getElementById('btn-refine-toggle').addEventListener('click', () => {
+  const visible = refineBar.classList.toggle('visible');
+  if (visible) { refineInput.focus(); refineStatus.textContent = ''; }
+});
 
-    // Formatting action
-    document.getElementById('btn-format').addEventListener('click', () => {
-      editor.getAction('editor.action.formatDocument').run();
-    });
+/* ============ Inline AI edit (Ctrl+I bar) ============ */
+aiCancel.addEventListener('click', closeAiBar);
+aiInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') applyAiEdit();
+  if (e.key === 'Escape') closeAiBar();
+});
+aiSubmit.addEventListener('click', applyAiEdit);
 
-    // Save action (ctrl+s / cmd+s)
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function() {
-      state.dirty[state.current] = false;
-      saveState.textContent = 'Saved';
-      saveState.className = 'save-state saved';
-      document.querySelector(`.file-item[data-file="${state.current}"]`).classList.remove('unsaved');
-    });
+function closeAiBar() {
+  aiBar.style.display = 'none';
+  if (editor) editor.focus();
+}
 
-    // Show AI Prompt Bar on Ctrl+I
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI, function() {
-      const promptBar = document.getElementById('ai-prompt-bar');
-      const promptInput = document.getElementById('ai-prompt-input');
-      promptBar.style.display = 'flex';
-      promptInput.value = '';
-      promptInput.focus();
-    });
+async function applyAiEdit() {
+  const prompt = aiInput.value.trim();
+  if (!prompt || !editor) return;
 
-    renderPreview();
-  });
+  const selection = editor.getSelection();
+  const selectedText = editor.getModel().getValueInRange(selection);
+  const code = selectedText || editor.getValue();
 
-  // AI Prompt Bar Operations
-  const aiPromptBar = document.getElementById('ai-prompt-bar');
-  const aiPromptInput = document.getElementById('ai-prompt-input');
-  const btnAiSubmit = document.getElementById('btn-ai-submit');
-  const btnAiCancel = document.getElementById('btn-ai-cancel');
+  aiSubmit.disabled = true;
+  aiSubmit.textContent = 'Editing…';
 
-  function closeAIBar() {
-    aiPromptBar.style.display = 'none';
-    if (editor) editor.focus();
-  }
-
-  btnAiCancel.addEventListener('click', closeAIBar);
-
-  aiPromptInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      submitAIEdit();
-    } else if (e.key === 'Escape') {
-      closeAIBar();
-    }
-  });
-
-  btnAiSubmit.addEventListener('click', submitAIEdit);
-
-  function submitAIEdit() {
-    const prompt = aiPromptInput.value.trim();
-    if (!prompt) return;
-
-    const selection = editor.getSelection();
-    const selectedText = editor.getModel().getValueInRange(selection);
-    
-    // If no text selected, we edit the whole document content
-    const textToEdit = selectedText || editor.getValue();
-    
-    btnAiSubmit.disabled = true;
-    btnAiSubmit.textContent = 'Editing...';
-
-    fetch('/api/edit_code', {
+  try {
+    const res = await fetch('/api/refine', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        code: textToEdit,
-        prompt: prompt,
-        file_type: files[state.current].lang
-      })
-    })
-    .then(resp => {
-      if (!resp.ok) throw new Error('AI edit failed');
-      return resp.json();
-    })
-    .then(data => {
-      if (data.edited_code) {
-        if (selectedText) {
-          const range = new monaco.Range(
-            selection.startLineNumber,
-            selection.startColumn,
-            selection.endLineNumber,
-            selection.endColumn
-          );
-          editor.executeEdits("ai-edit", [{
-            range: range,
-            text: data.edited_code,
-            forceMoveMarkers: true
-          }]);
-        } else {
-          editor.setValue(data.edited_code);
-        }
-        
-        // Mark document as dirty
-        if (!state.dirty[state.current]) {
-          state.dirty[state.current] = true;
-          saveState.textContent = 'Unsaved changes';
-          saveState.className = 'save-state dirty';
-          document.querySelector(`.file-item[data-file="${state.current}"]`).classList.add('unsaved');
-        }
-        renderPreview();
-      }
-      closeAIBar();
-    })
-    .catch(err => {
-      alert('Error: ' + err.message);
-    })
-    .finally(() => {
-      btnAiSubmit.disabled = false;
-      btnAiSubmit.textContent = 'Generate';
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: code, prompt }),
     });
-  }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'AI edit failed');
 
-  const defaultCommercialInvoice = {
-    exporter: "", importer: "", notify_party: "", invoice_no: "", invoice_date: "",
-    iec_no: "", gst_no: "", po_no: "", lc_no: "", lut_arn: "", ad_code: "", buyer_tax_id: "",
-    incoterms: "", port_of_loading: "", port_of_discharge: "", vessel_flight: "",
-    country_of_origin: "", pre_carriage: "", place_of_receipt: "", country_of_destination: "",
-    final_destination: "", terms_of_payment: "", terms_of_delivery: "", marks_and_nos: "",
-    pcs_count: "", cartons_count: "", carton_dimension: "", total_net_weight: "",
-    total_gross_weight: "", origin_declaration: "", invoice_declaration: "", currency: "",
-    item_table: [], total_qty: "", total_value: "", amount_in_words: "",
-    freight_charges: "", insurance_charges: "", bank_details: {
-      account_name: "", bank_name: "", account_no: "", swift_code: "", iban: "", branch: ""
-    },
-    layout: { font_family: "Arial, sans-serif", font_size_body: "8px", has_border: true }
-  };
-
-  const defaultPackingList = {
-    shipmentId: "", numCartons: "", grossWeight: "", contents: [],
-    shipper: "", consignee: "", notify_party: "", invoice_ref: "", bl_no: "",
-    packing_list_no: "", date: "", port_of_loading: "", port_of_discharge: "",
-    vessel_flight: "", country_of_origin: "", package_count: "", net_weight: "",
-    dimensions: "", cbm: "", marks_and_numbers: "", item_breakdown: [],
-    signatory: "", declaration: "",
-    layout: { font_family: "Arial, sans-serif", font_size_body: "8px", has_border: true }
-  };
-
-  function renderPreview() {
-    if (state.current === 'data') {
-      previewFrame.srcdoc = `<body style="font-family:monospace; font-size:12px; padding:20px; color:#5c6670; background:#fdfdfb;">Live preview rendered with data from data.json.<br><br>Switch to a template file to see the rendered output.</body>`;
-      renderStatus.textContent = 'Data configuration';
-      return;
+    if (selectedText) {
+      editor.executeEdits('ai-edit', [{
+        range: new monaco.Range(
+          selection.startLineNumber, selection.startColumn,
+          selection.endLineNumber, selection.endColumn
+        ),
+        text: data.html,
+        forceMoveMarkers: true,
+      }]);
+    } else {
+      editor.setValue(data.html);
     }
-
-    try {
-      const template = files[state.current].content;
-      const dataStr = files['data'].content;
-      let rawData = {};
-      if (dataStr.trim() !== '') rawData = JSON.parse(dataStr);
-      
-      // Flatten the raw data if it is structured as { docs: ..., item: ... }
-      let flatRawData = {};
-      if (rawData.docs) {
-        flatRawData = Object.assign(flatRawData, rawData.docs);
-      }
-      if (rawData.item) {
-        flatRawData.item_table = rawData.item;
-        flatRawData.item_breakdown = rawData.item;
-      }
-      for (const k in rawData) {
-        if (k !== 'docs' && k !== 'item') {
-          flatRawData[k] = rawData[k];
-        }
-      }
-
-      // Merge with schema defaults depending on document type to prevent EJS ReferenceErrors
-      let data = {};
-      if (state.current === 'packing') {
-        data = Object.assign({}, defaultPackingList, flatRawData);
-        data.layout = Object.assign({}, defaultPackingList.layout, flatRawData.layout);
-      } else {
-        data = Object.assign({}, defaultCommercialInvoice, flatRawData);
-        data.bank_details = Object.assign({}, defaultCommercialInvoice.bank_details, flatRawData.bank_details);
-        data.layout = Object.assign({}, defaultCommercialInvoice.layout, flatRawData.layout);
-      }
-
-      const html = ejs.render(template, data);
-      previewFrame.srcdoc = html;
-      renderStatus.textContent = 'rendered with sample data';
-      renderStatus.style.color = 'var(--mist)';
-    } catch (err) {
-      console.error(err);
-      renderStatus.textContent = 'Render error: ' + err.message;
-      renderStatus.style.color = '#dc2626';
-    }
-  }
-
-  function loadFile(key) {
-    state.current = key;
-    const file = files[key];
-    paneFilename.textContent = file.name;
-    
-    if (editor) {
-      monaco.editor.setModelLanguage(editor.getModel(), file.lang);
-      editor.setValue(file.content);
-    }
-    
-    saveState.textContent = state.dirty[key] ? 'Unsaved changes' : 'Saved';
-    saveState.className = 'save-state ' + (state.dirty[key] ? 'dirty' : 'saved');
-    
-    fileItems.forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.file === key);
-    });
-    
+    markDirty();
     renderPreview();
+    closeAiBar();
+    showToast('AI edit applied');
+  } catch (err) {
+    showToast('Error: ' + err.message, true);
+  } finally {
+    aiSubmit.disabled = false;
+    aiSubmit.textContent = 'Apply';
   }
+}
 
-  fileItems.forEach(btn => {
-    btn.addEventListener('click', () => loadFile(btn.dataset.file));
-  });
+/* ============ AI Refine bar ============ */
+refineClose.addEventListener('click', () => {
+  refineBar.classList.remove('visible');
+  refineStatus.textContent = '';
+});
 
-  document.getElementById('btn-fullscreen').addEventListener('click', () => {
-    const iframe = document.getElementById('preview-frame');
-    if (iframe.requestFullscreen) {
-      iframe.requestFullscreen();
-    } else if (iframe.webkitRequestFullscreen) {
-      iframe.webkitRequestFullscreen();
-    } else if (iframe.msRequestFullscreen) {
-      iframe.msRequestFullscreen();
-    }
-  });
+refineInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendRefine(); });
+refineSend.addEventListener('click', sendRefine);
 
+async function sendRefine() {
+  const prompt = refineInput.value.trim();
+  if (!prompt || !editor) return;
+
+  refineSend.disabled = true;
+  refineStatus.textContent = 'Sending to Gemini…';
+  refineStatus.className = 'refine-status thinking';
+
+  try {
+    const res = await fetch('/api/refine', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: editor.getValue(), prompt }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Refinement failed');
+    editor.setValue(data.html);
+    markDirty();
+    renderPreview();
+    refineInput.value = '';
+    refineStatus.textContent = 'Done — refinement applied.';
+    refineStatus.className = 'refine-status';
+    showToast('Refinement applied');
+  } catch (err) {
+    refineStatus.textContent = 'Error: ' + err.message;
+    refineStatus.className = 'refine-status';
+    showToast('Refinement failed: ' + err.message, true);
+  } finally {
+    refineSend.disabled = false;
+  }
+}
+
+/* ============ Toast ============ */
+let _toastTimer;
+function showToast(msg, isError) {
+  toastEl.textContent = msg;
+  toastEl.style.background = isError ? '#b3271e' : 'var(--ink)';
+  toastEl.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+}
 </script>
 </body>
 </html>

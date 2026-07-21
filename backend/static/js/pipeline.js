@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('file-input');
+    const fileDisplay = document.getElementById('file-display');
+    const fileName = document.getElementById('file-name');
+    const removeFileBtn = document.getElementById('remove-file-btn');
     const startBtn = document.getElementById('start-btn');
     const logStream = document.getElementById('log-stream');
     
@@ -21,6 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // File Upload handling
     uploadArea.addEventListener('click', () => fileInput.click());
+    
+    removeFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering uploadArea click
+        clearFile();
+    });
     
     uploadArea.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -49,9 +57,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleFile(file) {
         currentFile = file;
-        uploadArea.querySelector('p').textContent = file.name;
+        fileName.textContent = file.name;
+        fileDisplay.style.display = 'flex'; // Show file name and remove button
+        uploadArea.style.display = 'none'; // Hide upload area
         startBtn.disabled = false;
         addLog(`File loaded: ${file.name}`, 'info');
+    }
+
+    function clearFile() {
+        currentFile = null;
+        fileInput.value = ''; // Clear file input
+        fileName.textContent = '';
+        fileDisplay.style.display = 'none'; // Hide file display
+        uploadArea.style.display = 'flex'; // Show upload area
+        startBtn.disabled = true;
+        addLog('File cleared.', 'info');
     }
 
     function addLog(message, type='system') {
@@ -71,18 +91,68 @@ document.addEventListener('DOMContentLoaded', () => {
         'node-output'
     ];
 
-    startBtn.addEventListener('click', () => {
+    startBtn.addEventListener('click', async () => {
+        if (!currentFile) {
+            addLog('No file selected.', 'error');
+            return;
+        }
+
         startBtn.disabled = true;
         logStream.innerHTML = ''; // Clear logs
         addLog('Pipeline started...', 'info');
-        
+
         // Reset nodes
         nodes.forEach(id => {
             document.getElementById(id).className = 'node';
         });
-        
-        simulatePipeline();
+
+        try {
+            const imageData = await processFile(currentFile);
+            if (imageData) {
+                // Simulate sending to backend and then pipeline
+                addLog('Sending image data to backend for digitization...', 'system');
+                // In a real scenario, you'd send `imageData.data` and `imageData.mimeType` to your backend.
+                // For now, we'll just simulate the pipeline after conversion.
+                await new Promise(r => setTimeout(r, 1000)); // Simulate API call
+                simulatePipeline();
+            } else {
+                addLog('File processing failed.', 'error');
+                startBtn.disabled = false;
+            }
+        } catch (error) {
+            addLog(`Error processing file: ${error.message}`, 'error');
+            startBtn.disabled = false;
+        }
     });
+
+    async function processFile(file) {
+        return new Promise((resolve, reject) => {
+            if (file.type === 'application/pdf') {
+                addLog('Converting PDF to image...', 'system');
+                // Placeholder for PDF to image conversion using pdf.js
+                // You would typically load pdf.js here and render the first page to a canvas,
+                // then convert the canvas to a data URL.
+                // For now, we'll just simulate success after a delay.
+                setTimeout(() => {
+                    addLog('PDF conversion simulated. (Integration with pdf.js required)', 'warning');
+                    // Resolve with dummy image data for now
+                    resolve({ data: 'dummy_base64_image_data', mimeType: 'image/png' });
+                }, 2000);
+            } else if (file.type.startsWith('image/')) {
+                addLog('Reading image file...', 'system');
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // The result is a data URL (e.g., data:image/png;base64,iVBORw...)
+                    const base64Image = reader.result;
+                    resolve({ data: base64Image.split(',')[1], mimeType: file.type });
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            } else {
+                reject(new Error('Unsupported file type. Please upload a PDF or image.'));
+            }
+        });
+    }
 
     async function simulatePipeline() {
         const delay = ms => new Promise(r => setTimeout(r, ms));

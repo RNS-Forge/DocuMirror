@@ -1,1 +1,0 @@
-# DocuMirror backend package

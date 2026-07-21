@@ -40,10 +40,16 @@
               <p>Initialize the multi-agent pipeline</p>
           </div>
           
-          <div class="upload-area" id="upload-area">
-              <div class="upload-icon">📄</div>
-              <p>Drag & drop image/PDF here or click to browse</p>
-              <input type="file" id="file-input" hidden accept=".pdf,.png,.jpg,.jpeg">
+          <div class="upload-card">
+              <div class="upload-area" id="upload-area">
+                  <div class="upload-icon">📄</div>
+                  <p>Drag & drop image/PDF here or click to browse</p>
+                  <input type="file" id="file-input" hidden accept=".pdf,.png,.jpg,.jpeg">
+              </div>
+              <div class="file-display" id="file-display" style="display: none;">
+                  <span id="file-name"></span>
+                  <button class="remove-file-btn" id="remove-file-btn">✖</button>
+              </div>
           </div>
           
           <div class="control-group">
